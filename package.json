@@ -1,0 +1,39 @@
+{
+  "name": "madhubani-animals",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fork of procedural-animals: 24 procedural animals with a TSL/WebGPU render layer and a first-class Madhubani coat mode.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
+    "./species/*": "./src/species/*/index.js",
+    "./worker": "./src/worker.js",
+    "./bake": "./src/bake.js",
+    "./package.json": "./package.json"
+  },
+  "bin": { "procedural-animals-bake": "./tools/bake.mjs" },
+  "sideEffects": ["./src/worker.js"],
+  "engines": { "node": ">=18" },
+  "peerDependencies": { "three": ">=0.186.0" },
+  "dependencies": {
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "1.56",
+    "vite": "^5.4.21"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:showcase": "node showcase/build.mjs",
+    "build:pages": "node showcase/build.mjs --pages",
+    "test": "node tools/test.mjs"
+  },
+  "keywords": ["three", "threejs", "procedural", "animals", "webgpu", "tsl", "madhubani", "sdf", "fur"]
+}

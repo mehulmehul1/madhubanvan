@@ -1,0 +1,12 @@
+# Normalise line endings to LF in the repo and in the working tree.
+# Without this, Windows checkouts (core.autocrlf=true) rewrite every JS/CSS/HTML
+# file's line endings and the whole tree shows as modified.
+* text=auto eol=lf
+
+# Binary-ish / generated
+*.png   binary
+*.jpg   binary
+*.webp  binary
+*.mp4   binary
+*.woff2 binary
+*.woff  binary
