@@ -5,3 +5,9 @@ out/
 *.animal
 .DS_Store
 .claude/
+
+# Upstream's GitHub Pages showcase deploy workflow. Kept on disk, not committed:
+# it deploys the public showcase, which a private repo cannot do without Pro, and
+# the gh OAuth token in use has no `workflow` scope, so GitHub rejects every push
+# that contains it. Delete this line to restore the file to version control.
+.github/workflows/pages.yml
