@@ -1,7 +1,7 @@
 <!-- katchni 11 - hatch border band: 5 bowed diagonal ticks ruled one way between 2 wobbling bound rules, a B bead set in the channel — an edge strip. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <rect class="g" x="0" y="0" width="100" height="100"/>
-  <rect class="fa" x="0" y="0" width="100" height="100"/>
+  
   <path class="si" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M-10,24 C20,21 50,20 80,23 C95,24.5 103,24 110,22"/>
   <path class="sa" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M-10,76 C25,78.5 55,79 85,75.5 C97,74 104,74.5 110,76"/>
   <path class="si" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14,68 C18,58 22,48 28,36"/>

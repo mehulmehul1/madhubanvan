@@ -16,6 +16,16 @@
 //               "blown out / fat black lines" failure the whole SVG move exists to escape
 //   elements    density must come from stroke width and spacing, not from adding more elements
 //   colour      no literal colour in source; colour comes from the role classes only
+//   bleed       a tile must NOT carry its own background. The shader supplies the zone's ground from
+//               the palette, so a full-bleed fa/fb rect paints the whole body part one flat colour and
+//               the drawing disappears once tiled. This is invisible on the swatch page — a filled
+//               square reads fine there — so it has to be caught in source, not by eye.
+//   marks       at least 4 mark elements. Without a floor, a motif can satisfy every other rule with
+//               one full-bleed rect and nothing else, and still be a blank tile on the animal.
+//
+// The last two exist because 12 of the 84 motifs shipped with a full-bleed background rect, and 7 of
+// those had no other fill B anywhere — the rect WAS their fill B, so removing it (correctly) left
+// them two-tone-deficient. Counting classes alone cannot see either failure.
 //
 // Per-style ink limits differ on purpose: a line-work style is mostly stroke by nature, while a
 // filled style must be mostly mass.
@@ -59,8 +69,26 @@ for (const style of Object.keys(LIMITS)) {
     const ink = (c.fi + c.si) / (total || 1);
     const beads = c.bd / (total || 1);
 
+    // A tile must NOT carry its own background. The shader supplies the zone's ground colour from
+    // the palette, so a full-bleed fa/fb rect paints the entire body part one flat colour and the
+    // drawing vanishes once tiled. Invisible on the swatch page — a filled square reads fine there —
+    // which is exactly why it has to be a source rule and not a visual check.
+    let fullBleed = false;
+    for (const m of src.matchAll(/<rect\b([^>]*?)\/?>/g)) {
+      const attrs = m[1];
+      const toks = (/class="([^"]+)"/.exec(attrs)?.[1] ?? '').split(/\s+/);
+      const w = parseFloat(/width="([\d.]+)"/.exec(attrs)?.[1] ?? '0');
+      const h = parseFloat(/height="([\d.]+)"/.exec(attrs)?.[1] ?? '0');
+      if ((toks.includes('fa') || toks.includes('fb')) && w >= 99 && h >= 99) fullBleed = true;
+    }
+    // Density has to come from marks. Without a floor, a motif can satisfy every rule above with one
+    // full-bleed rect and nothing else, and still be a blank tile on the animal.
+    const marks = total - c.g;
+
     const fail = [];
     if (c.g === 0) fail.push('no ground rect');
+    if (fullBleed) fail.push('full-bleed fa/fb rect — tiles as flat colour, kills the drawing');
+    if (marks < 4) fail.push(`only ${marks} mark elements — too sparse to read when tiled`);
     if (c.sib === 0 && c.fb === 0) fail.push('single-tone, no fill B');
     if (beads > lim.beads) fail.push(`beads ${beads.toFixed(2)} > ${lim.beads}`);
     if (ink > lim.ink) fail.push(`ink ${ink.toFixed(2)} > ${lim.ink}`);

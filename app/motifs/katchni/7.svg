@@ -1,7 +1,7 @@
 <!-- katchni 7 - herringbone: 6 shallow bowed chevrons in 2 offset columns x 3 rows (ink, A, B), the fine grain for the paws. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <rect class="g" x="0" y="0" width="100" height="100"/>
-  <rect class="fa" x="0" y="0" width="100" height="100"/>
+  
   <path class="si" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4,22 C16,19 28,15 38,9 C48,15 58,19 70,21"/>
   <path class="sib" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M48,30 C60,27 72,23 82,17 C90,22 98,25 108,26"/>
   <path class="sa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M-8,54 C4,51 16,47 26,41 C36,47 46,51 56,53"/>

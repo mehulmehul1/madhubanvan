@@ -21,4 +21,8 @@
   <circle class="fb" cx="68.4" cy="29" r="1.6"/>
   <!-- loose corner bead -->
   <circle class="bd" cx="88" cy="14" r="2.6"/>
+  <!-- sparse echo trio in the opposite corner, so the tile does not gutter blank -->
+  <circle class="fb" cx="12" cy="84" r="1.7"/>
+  <circle class="fb" cx="5" cy="73" r="1.6"/>
+  <circle class="fb" cx="23" cy="90" r="1.6"/>
 </svg>

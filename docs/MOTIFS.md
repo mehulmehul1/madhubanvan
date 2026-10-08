@@ -50,13 +50,20 @@ and the gate flags it.
 - **Every stroked element needs an explicit `stroke-width`** and `stroke-linejoin="round"`. The CSS
   supplies colour only, never width — so a `<path class="si">` with no `stroke-width` draws with
   hairline width and will look wrong.
-- A motif is **one self-contained tile** that should cover most of its cell. It does *not* need to
-  tile seamlessly: in bomb mode every seed draws its own tile in its own tangent plane with a small
-  rotation, and neighbours overlap. That is why a motif may bleed past its viewBox on purpose
-  (`M-8,...` or `...,108`) — often it should.
+- A motif is **one tile that repeats**, so it must tile seamlessly: the shader wraps it with
+  `RepeatWrapping` across the body, at the same scale everywhere. Marks that cross an edge must land
+  identically on the far side — so a mark either bleeds cleanly off both edges (`M-8,...` and
+  `...,108`) or sits well inside the tile. Nothing should end abruptly at the boundary.
+- **Do not give a tile its own background.** No `<rect class="fa">` or `<rect class="fb">` covering
+  `width="100" height="100"`. The shader supplies the zone's ground colour from the palette, so a
+  full-bleed fill paints the entire body part one flat colour and the drawing vanishes when tiled.
+  It looks perfectly fine on the swatch page — which is exactly why it is a gate rule and not
+  something to eyeball. Leave the ground transparent and let the marks sit on the zone colour.
 - Real bezier curves (`C`) for drawn shapes. Straight `<line>` and shape-by-`<polygon>` read as
   clip-art, which is the exact failure the move from SDF to SVG exists to fix. Small accents — a
   bead, an eye, a centre dot — may be `<circle>`.
+- Put **at least 4 mark elements** in a tile. Density should come from stroke width and spacing, but
+  a tile with nothing in it reads as a blank patch on the animal.
 
 ## The quality gate
 

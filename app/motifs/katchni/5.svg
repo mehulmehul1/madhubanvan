@@ -1,7 +1,7 @@
 <!-- katchni 5 - basket weave: 3 wobbling vertical A ribbons crossed by 3 wobbling horizontal B ribbons, layered over-under, for the wing. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <rect class="g" x="0" y="0" width="100" height="100"/>
-  <rect class="fa" x="0" y="0" width="100" height="100"/>
+  
   <path class="sia" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M11,-10 C13,10 9,35 12,60 C13,80 12,95 12,110 L27,110 C27,90 25,65 27,40 C28,20 26,5 27,-10 Z"/>
   <path class="sia" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M43,-10 C45,15 41,40 44,65 C45,85 44,95 44,110 L59,110 C59,85 57,60 59,35 C60,15 58,0 59,-10 Z"/>
   <path class="sia" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M75,-10 C77,12 73,38 76,62 C77,82 76,96 76,110 L91,110 C91,88 89,62 91,38 C92,18 90,2 91,-10 Z"/>
