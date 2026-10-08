@@ -18,16 +18,17 @@ Repo: `experiments/madhubani-animals` (fork of `procedural-animals`; render laye
 |---|---|
 | Engine (sculpt / rig / motion / mesher) | Working, upstream, untouched |
 | Natural coat | Working |
-| Madhubani coat — `chain` mode (original) | Working, kept as A/B baseline (`?mtiles=chain`) |
+| Madhubani coat — `chain` mode (original) | Superseded by body-space placement; still reachable, now the default path |
 | Madhubani coat — body-space pattern (default) | **Working** — motifs in `(around, along)` metres, zones from `designGroup` (Session 7) |
 | Madhubani coat — `bomb` mode (Voronoi) | Legacy, kept only for A/B via `?mtiles=bomb` — **wrong placement model, do not use** |
-| Style vocabularies (scallop/kohbar/katchni/godna/tantrik/bharni/vyaghra) | Authored, driven per-cell in bomb mode |
-| Per-species tile size | **Not done** (one fixed size today — see Known issues) |
+| Style vocabularies (scallop/kohbar/katchni/godna/tantrik/bharni/vyaghra) | Authored; **8 of 12 motifs per style are assigned** to the 8 anatomy zones, 4 are spares (Session 8) |
+| Per-species tile size | **Not done** — one global `uMotifM` (0.06 m) for all species (Session 8) |
 | Row-locked scales | **Not done** |
 | Pattern/palette HTML viewer | **Done** — `patterns.html`, 7 styles × 12, palettes, role mask, source links |
 | Per-creature muscle-mass variation viewer | **Not done** (requested — see Roadmap) |
 | Motif library (shapes) | **Done** — 84 authored SVGs, 12 per style, gate 84/84 (Session 6) |
 | Motif → GPU bake | **Done** — role-mask texture array, 84 layers, hand-built mips (Session 6) |
+| Motif tiling correctness | **Done** — no self-supplied backgrounds; 12 flat tiles fixed, gate rules `bleed` + `marks` added (Session 8) |
 | Coat look / shading | Flat marks + light binding in place (Session 3) — but the **toon shading does not read yet; needs work** (Session 4). **Relief/embossing decided against** (Session 2) |
 
 ---
@@ -289,6 +290,21 @@ question — *why are we using Voronoi at all?* — and the reference paintings 
 large anatomical zones with smooth organic boundaries; motif direction following each part's own
 axis; contour compression where the body turns away; and not one straight polygon edge anywhere.
 
+Reading the three reference paintings concretely, since they are the spec for this look:
+
+- **Cow** — rope-texture bands run *around* the barrel, i.e. horizontal rings; the same animal's leg
+  stripes run *vertical*. So direction is per-zone and follows the part's own axis, not one global
+  direction. Head and neck are stippled with no bands at all. There is a visible vertical join line
+  where the pattern closes around the body — so our angular-wrap seam is authentic, not a defect.
+- **Bird/deer creature** — overlapping fan shapes in dense regular rows. They visibly compress and
+  splay where the body turns away over the back and rump. That compression is the signature of a real
+  surface parameterization, and we had nothing that could produce it.
+- **Boar** — the clearest case: overlapping scallop fans in large anatomical colour zones (blue-grey
+  back, tan flank and rump, red head and legs, pale belly, striped tail) with smooth organic
+  boundaries. Within each zone the same motif repeats in a regular grid aligned to the body, and the
+  rows flow continuously across the zone boundary. That is exactly the 8-zone anatomy we already had
+  in `designGroup`, and exactly what Voronoi cells could not express.
+
 **Why Voronoi could not.** Bomb mode gives every seed its own tangent plane, so motif *orientation* is
 discontinuous at every cell boundary. That is the blobby look — structurally, not as a tuning problem.
 It was a way to pattern a mesh without UVs, which was never the actual constraint.
@@ -319,6 +335,73 @@ still unverified behind the WebGL2 fallback.
 
 ---
 
+### Session 8 — 2026-10-08 — 8 of 12 motifs are in use; stop tiles from painting flat colour
+
+**The motif-count question.** `STYLE_ZONES` assigns **8 of the 12 motifs per style** to the 8 anatomy
+zones — 56 of 84 files. The remaining 4 per style are spares, never referenced by anything; they exist
+so two individuals of one species can differ and as somewhere to put authored placement later
+(a lotus on the shoulder, a border along the back). The artist can re-zone any style by editing that
+one table.
+
+**The plain-body-parts bug.** Artist report: some parts, legs especially, read as flat colour. It was
+not a placement problem and not a palette problem. 12 of the 84 motifs had been authored with a
+full-bleed background rect:
+
+```xml
+<rect class="fb" x="0" y="0" width="100" height="100"/>
+```
+
+The shader already supplies the zone's ground from the palette, so that rect was painting every part
+one solid colour with the motif's own marks lost inside it. Distribution was lopsided: **9 of katchni's
+12 motifs** and 3 of godna's 12, which is exactly why those legs and flanks read as flat slabs.
+
+Crucially this was **invisible on the swatch page** — a filled square looks like a perfectly good
+motif there — so no amount of looking at `patterns.html` would ever have caught it.
+
+**Two gate rules, because counting classes cannot see this.** `tools/motifstats.mjs` counts role
+classes, where a full-bleed rect is just "one fb". Added:
+
+- `bleed` — reject any `<rect>` with class `fa`/`fb` covering ≥99% of the tile.
+- `marks` — require at least 4 mark elements, so a tile cannot satisfy every other rule while blank.
+
+`tools/flatmotifs.mjs` is a second, independent check that measures *baked* coverage per channel and
+flags a tile that is ≥90% one channel across ≥97% of its area. It identified the same 12 from a
+completely unrelated method, which is the confidence that matters here.
+
+**The latent bug underneath.** Stripping the rects (`tools/stripbleed.mjs`, marks untouched) made the
+gate fail 7 motifs for `single-tone, no fill B`. Those 7 had no fill B *anywhere else* — the
+full-bleed rect **was** their fill B, and the marks that were supposed to sit on it had never been
+authored. So the fix was not a deletion; it was authoring the missing colour:
+
+- `katchni` 0/4/6/8/10 — fill-B dots and lozenges set into the gaps of the existing hatch rulings
+- `godna` 1/2 — fill-B circles staggered through the dot and dash rows, radii varied to match `godna/0`
+- `godna` 6 — was at 1.5% baked coverage and assigned to paws; three more comma marks added
+
+**Docs corrected, not just appended.** `docs/MOTIFS.md` had a rule that had become false: "does *not*
+need to tile seamlessly: in bomb mode every seed draws its own tile in its own tangent plane and
+neighbours overlap." That described the Voronoi path we abandoned in Session 7. Tiles *do* repeat now,
+via `RepeatWrapping` in body space, so seamlessness is a real requirement. The no-background rule is
+now documented next to it.
+
+Verified: gate **84 checked / 0 failures**; baked flatness **12 → 0**; all 7 atlases re-baked and
+headers checked; diagnostics clean; godna and katchni re-rendered on the boar with legs now carrying
+visible marks. Commits `24abf5a` (Session 6+7 work) and `3bf2083` (this fix), both pushed.
+
+**Left open on purpose.** Three tiles remain sparse at 2–3% baked coverage: `katchni/2` (head),
+`godna/0` (neck), `godna/6` (paws). Fine hatch and dot motifs are sparse by nature and they pass every
+gate rule, so thickening them is an art judgement rather than a defect. Also noted for the artist:
+katchni's ~1.4px rulings sit near the resolution floor on a thin leg, so its legs read as texture
+rather than distinct marks — an easy target if the line work should be bolder.
+
+**Process note worth carrying forward.** The Session 6 wiring was correct and I still could not see it
+on the animal. Three wrong diagnoses in a row — stale browser cache, then a stray `mtiles=chain` — both
+blamed on the environment, when the server had been serving the right code the whole time and the real
+fault was the placement model underneath. The thing that actually settled it was the artist asking why
+Voronoi was there at all, and looking at the reference paintings. Worth reaching for the reference
+material sooner, and worth distrusting "the environment is stale" after the first failed re-load.
+
+---
+
 ## Raw notes from the artist
 
 > Verbatim, unedited, in full. This is the direction of record — everything below is commentary, this
@@ -332,28 +415,42 @@ krna kya h, artist kaa kaam h sirf art banana aur kuch nhi krna sirf art banana 
 
 ## Roadmap derived from the notes (our reading, to be confirmed)
 
-**NEXT (agreed, Session 5).** Rebuild the motif library as **authored SVG** — I write the SVG, bake to
-an atlas, shader only places/colours. This comes before everything else in the list below.
+**~~NEXT (agreed, Session 5).~~ DONE in Sessions 6–8.** Rebuild the motif library as **authored SVG** —
+bake to an atlas, shader only places and colours. Shipped: 84 motifs, role-mask texture array,
+body-space placement. What is left of that item is only the art review, which is item 1 below.
+
+Ordered list, with current state:
 
 1. **Finish the TSL port of the coat** so the painter works in TSL end to end, then review the
-   Madhubani patterns and styles as art (not as code).
+   Madhubani patterns and styles as art (not as code). **Now the main open item.** The coat renders,
+   but the artist has only seen it at a distance on a boar and a cheetah; it has not been reviewed
+   up close across species.
 2. **Pattern + palette HTML viewer.** One page showing every style's tile set and every palette side
-   by side, so we can talk about designs directly. (`app/patterns.html` already exists as a partial
-   SVG swatch book — extend it.)
+   by side, so we can talk about designs directly. **Done** — `app/patterns.html` (Session 6).
 3. **Per-creature variation viewer.** Vary the SDF muscle mass (size/shape/proportions) to produce N
    distinct individuals per creature (e.g. ~12 horses), shown all at once, so the artist can pick
-   keepers. Needs a variation harness + a grid contact sheet (`tools/variations.mjs`).
+   keepers. Needs a variation harness + a grid contact sheet (`tools/variations.mjs`). **Not done.**
 4. **Per-species tile sizing** and **row-locked scales** so the coat reads correctly on every body.
+   **Partly conceptualised** — motif scale is now one honest global number, `uMotifM = 0.06 m`
+   (Session 7), but it is not yet per-species.
 5. **Toon / banded shading** for the Madhubani material: flat marks, 2–3 hard light bands (`N·L`
-   quantised), ink outline. **No relief** (decided Session 2).
+   quantised), ink outline. **No relief** (decided Session 2). **Still does not read** (Session 4) —
+   untouched since, and a likely contributor to why the coat looks flat at a distance.
 6. **Authored placement** on top of the seed fill: pin motifs to landmarks/regions (lotus on the
-   shoulder, a border along the back, a quiet snout) instead of one uniform rule.
+   shoulder, a border along the back, a quiet snout) instead of one uniform rule. **Now tractable** —
+   the 4 unused spares per style (Session 8) are the natural home for this, and body-space placement
+   gives per-zone control that the old Voronoi path could not offer.
 7. **Element extraction -> 3D.** Take motifs from the paintings (circles, lotus flowers, etc.) and
    model them as 3D elements/decorations.
 8. **Choreography.** Instantiate those elements and animate them in rhythm along designated paths and
    frames, however complex.
 9. **Composition POC.** Front-view frame with horses moving in 3D (no gravity fall — already
    available), building toward complex layered layouts.
+
+**Cross-cutting risks still open.** WGSL is unverified — every render so far went through the WebGL2
+fallback because the headless browser here has no WebGPU adapter, so the whole atlas path is proven
+only on one of the two backends. And per Session 7, `bomb`/Voronoi is dead code that should be deleted
+once nothing references it.
 
 ---
 
@@ -367,4 +464,18 @@ an atlas, shader only places/colours. This comes before everything else in the l
 - `src/core/render/animalObject-tsl.js` — `makeMadTextures`, 2D packing, disposal
 - `src/core/render/coat-tsl.js` — forward `tiles` / `grid`
 - `src/animal.js` — forward `madhubaniTiles`
-- `app/main.js` — `mtiles` / `mdbg` URL params
+- `app/main.js` — `mtiles` / `mdbg` URL params; load the motif atlas before building the animal
+- `src/core/render/madhubani/atlas.js` — **new (S6).** Baked `.bin` → one `DataArrayTexture`, hand-built mip chain, style→layer offsets
+- `src/core/render/madhubani/color.js` — **S6** atlas sampling in bomb mode; **S7** re-sampled in body space `(around, along)`, `uAtlasOffset` + `uMotifM`
+- `src/core/render/madhubani/zones.js` — 8 anatomy zones → 8 distinct motifs per style, 4 spares
+- `src/core/render/coat-tsl.js`, `src/core/render/animalObject-tsl.js` — forward `madhubaniAtlas`
+- `app/motifs/<style>/0..11.svg` — **new (S6).** 84 authored motifs
+- `app/atlas/*.bin` — **new (S6), committed.** 7 baked role-mask arrays, regenerated S8
+- `app/patterns.js`, `app/patterns.html` — 12-up field view, role mask, anatomy map, source links
+- `tools/bakeatlas.mjs` — **new (S6).** SVG → role-mask binary, four renders per motif
+- `tools/motifstats.mjs` — **S6** density/colour gate; **S8** `bleed` + `marks` rules
+- `tools/flatmotifs.mjs` — **new (S8).** Baked-coverage check for flat tiles
+- `tools/stripbleed.mjs` — **new (S8).** Remove self-supplied full-bleed backgrounds
+- `tools/motifuse.mjs` — **new (S6).** Which motifs reach which zone, and how much they cover
+- `tools/shot3d.mjs` — **new (S6).** 3D render + console/shader-error capture, `--nocov` / `--noatlas`
+- `docs/MOTIFS.md` — **new (S6).** The artist's editing guide
