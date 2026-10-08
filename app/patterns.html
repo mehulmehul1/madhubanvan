@@ -10,42 +10,97 @@
     body { margin: 0; background: #f3ecdf; color: #241d15; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
     header { padding: 14px 18px 6px; }
     h1 { font-size: 16px; margin: 0 0 2px; letter-spacing: .02em; }
-    .sub { opacity: .65; max-width: 820px; }
+    .sub { opacity: .65; max-width: 860px; }
     section { padding: 4px 18px; }
-    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; opacity: .6; margin: 16px 0 4px; }
-    .pal { display: flex; align-items: flex-start; gap: 8px; margin: 3px 0 10px; }
+    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .14em; opacity: .6; margin: 18px 0 4px; }
+    h3 { font-size: 12px; margin: 14px 0 2px; letter-spacing: .04em; }
+    .note { opacity: .6; max-width: 840px; margin: -2px 0 8px; font-size: 11px; }
+
+    /* palette strip */
+    .pal { display: flex; align-items: flex-start; gap: 8px; margin: 3px 0 8px; }
     .pal .name { width: 92px; padding-top: 3px; opacity: .85; }
     .chips { display: flex; gap: 3px; }
     .chip { width: 30px; height: 22px; border: 1px solid rgba(0,0,0,.25); border-radius: 2px; position: relative; }
     .chip span { position: absolute; top: 24px; left: 0; font-size: 8px; opacity: .5; }
-    .controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    select { font: inherit; padding: 3px 6px; }
-    .grid { display: grid; gap: 10px; max-width: 860px; margin: 6px 0 22px; }
-    .note { opacity: .6; max-width: 800px; margin: -2px 0 8px; font-size: 11px; }
+
+    .controls { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    select, button { font: inherit; padding: 3px 6px; }
+    button.on { background: #241d15; color: #f3ecdf; border-color: #241d15; }
+
+    .grid { display: grid; gap: 10px; margin: 6px 0 8px; }
     .tile { border: 1px solid rgba(0,0,0,.22); background: #efe6d6; }
-    .tile svg { display: block; width: 100%; height: auto; }
-    .tile .cap { font-size: 10px; padding: 2px 5px; opacity: .8; border-top: 1px solid rgba(0,0,0,.12); }
+    /* a spare is a motif no body zone claims yet: the shader can swap one in per seed,
+       and authored placement will go here later. Marked so it is not mistaken for dead weight. */
+    .tile.spare { border-style: dashed; border-color: rgba(0,0,0,.38); }
+    .tile.spare .cap em { color: #8a5a1a; font-weight: 600; }
+    .tile .art { overflow: hidden; }
+    .tile .cap { font-size: 10px; padding: 3px 6px; opacity: .82; border-top: 1px solid rgba(0,0,0,.12); display: flex; justify-content: space-between; gap: 6px; }
+    .tile .cap b { font-weight: 600; }
+    .tile .cap em { font-style: normal; opacity: .6; }
+
+    /* ── THE ROLE CONTRACT ──────────────────────────────────────────────────────────────────────
+       A motif never hardcodes a colour. These nine classes are the only paint a
+       motif is allowed to use, and they are exactly the channels the future
+       texture array will store. Switching a palette or switching to role-mask
+       view is purely a change of these CSS variables — the SVG is untouched. */
+    .motif .g   { fill: var(--ground); }
+    .motif .fi  { fill: var(--ink); }
+    .motif .fa  { fill: var(--fa); }
+    .motif .fb  { fill: var(--fb); }
+    .motif .bd  { fill: var(--bead); }
+    .motif .si  { fill: none; stroke: var(--ink); stroke-linecap: round; }
+    .motif .sa  { fill: none; stroke: var(--fa); stroke-linecap: round; }
+    .motif .sia { fill: var(--fa); stroke: var(--ink); stroke-linejoin: round; }
+    .motif .sib { fill: var(--fb); stroke: var(--ink); stroke-linejoin: round; }
+
+    /* field view: the same motif repeated, to judge how it tiles a body */
+    .motif.field svg { display: block; width: 100%; height: auto; }
+    .motif.field .cell { width: 50%; float: left; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; }
+    .lg { display: flex; align-items: center; gap: 4px; font-size: 10px; border: 1px solid rgba(0,0,0,.18); padding: 2px 6px 2px 3px; background: #efe6d6; }
+    .lg i { width: 13px; height: 13px; display: block; border: 1px solid rgba(0,0,0,.3); }
+    .lg code { font-size: 10px; opacity: .7; }
+
+    #loadErr { color: #a33; padding: 10px 0; font-size: 12px; }
   </style>
 </head>
 <body>
   <header>
     <h1>Madhubani swatch book</h1>
-    <div class="sub">The tile-field vocabulary, drawn directly. Every tile is <b>full coverage</b> — overlapping scales, brick stitches, hatch, dots, bands. Each body zone picks its own tile and colour; colours cycle per tile row, giving 2/3/4-colour ramps. Same definitions drive the animals.</div>
+    <div class="sub">
+      The motif library, drawn as <b>real SVG</b> — bezier paths, not SDF primitives. Every motif paints
+      into named <b>roles</b> (ink / fill A / fill B / bead / ground), never hardcoded colours, so the same
+      drawing serves all eight palettes. The shader will only ever place and colour these.
+    </div>
   </header>
+
+  <section>
+    <h2>Controls</h2>
+    <div class="controls" id="controls"></div>
+    <div class="note" id="styleNote"></div>
+  </section>
+
+  <section>
+    <h2>Role contract</h2>
+    <div class="note">These nine classes are the whole vocabulary a motif may use. They are also exactly the channels the baked atlas will store, so the bake is a straight read of the same classes — there is no second contract to keep in sync. Flip on <b>role mask</b> to see the raw channels.</div>
+    <div class="legend" id="legend"></div>
+  </section>
+
   <section>
     <h2>Palettes</h2>
     <div id="palettes"></div>
   </section>
+
+  <section id="styleHost"></section>
+
   <section>
-    <h2>Controls</h2>
-    <div class="controls" id="controls"></div>
-    <div id="styleInfo" style="opacity:.7;margin-top:6px"></div>
+    <h2>All motifs</h2>
+    <div class="note">Every style's four tiles in one sheet, grouped by style.</div>
+    <div id="allHost"></div>
   </section>
-  <section id="styleGrid"></section>
-  <section id="zoneGrid"></section>
-  <section id="motifGrid"></section>
-  <section id="borderGrid"></section>
-  <section id="palGrid"></section>
+
+  <div id="loadErr"></div>
   <script type="module" src="./patterns.js"></script>
 </body>
 </html>

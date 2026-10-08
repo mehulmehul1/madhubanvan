@@ -7,26 +7,38 @@
 // The zone maps are deliberately DIFFERENT per style so the engines read differently on the animal
 // (an earlier cut gave scallop and kohbar the same tile for every zone, so they looked identical).
 //
-// tile ids are LOCAL to each style's own library (see the STYLE_TILES sets in fields.js):
-//   scallop  0 scale · 1 double scale · 2 scale+line · 3 small scales
-//   vyaghra  0 band  · 1 tapered     · 2 double band · 3 band+zigzag
-//   kohbar   0 lotus · 1 fish        · 2 bamboo      · 3 frame
-//   katchni  0 parallel · 1 cross    · 2 stipple     · 3 wave
-//   godna    0 dots · 1 dashes       · 2 crosses     · 3 triangles
-//   tantrik  0 rings · 1 rosette     · 2 triangles   · 3 star
+// ── Twelve motifs per style ───────────────────────────────────────────────────────────────────────
+// Each style owns TWELVE tiles (app/motifs/<style>/0..11.svg). The eight zones take eight DISTINCT
+// tiles — one per zone, never reused. That is the fix for the old 4-per-style layout, where scallop
+// put its tile 0 on four zones and the anatomy row read as the same motif repeated.
 //
-// Zone maps are deliberately different per style, and NO zone is left plain.
+// The four tiles left over per style are SPARES: the shader can pick a different spare for a zone
+// per seed so two individuals of one species are not identically marked, and there is somewhere to
+// put authored placement later (lotus on the shoulder, a border along the back).
+//
+// The assignments below are a PROPOSAL grounded in how each motif behaves at that scale and on that
+// part — bold figurative marks on the head and shoulder, fine hatching on legs and paws, linear marks
+// on the tail and fin. They are meant to be argued with and moved.
+//
+// No zone is left plain.
 
 export const ZONE_NAMES = ['trunk', 'neck', 'head', 'legs', 'paws', 'tail', 'wing', 'fin'];
 
+//        designGroup:  0 trunk  1 neck  2 head  3 legs  4 paws  5 tail  6 wing  7 fin
 export const STYLE_ZONES = {
-  scallop: { tiles: [0, 0, 3, 2, 1, 0, 2, 0], slots: [0, 1, 2, 1, 0, 2, 1, 1], colours: 3 },
-  vyaghra: { tiles: [0, 0, 3, 1, 2, 0, 1, 1], slots: [0, 1, 2, 1, 0, 2, 1, 1], colours: 3 },
-  kohbar: { tiles: [0, 2, 1, 3, 0, 1, 2, 3], slots: [0, 2, 1, 3, 0, 2, 1, 3], colours: 4 },
-  katchni: { tiles: [0, 1, 2, 0, 1, 3, 1, 0], slots: [0, 1, 0, 1, 0, 1, 0, 1], colours: 2 },
-  godna: { tiles: [0, 1, 2, 3, 0, 1, 2, 3], slots: [0, 1, 0, 1, 0, 1, 0, 1], colours: 2 },
-  tantrik: { tiles: [1, 0, 2, 3, 0, 1, 2, 3], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 4 },
-  bharni: { tiles: [0, 1, 3, 2, 0, 1, 3, 2], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 4 },
+  scallop: { tiles: [ 0,   7,   1,   3,   5,  11,   4,   2], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 3 },
+  vyaghra: { tiles: [ 0,   6,   1,  10,   7,  11,   4,   9], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 3 },
+  kohbar:  { tiles: [ 0,   1,   3,   2,   6,  10,   4,   9], slots: [0, 2, 1, 3, 0, 2, 1, 3], colours: 4 },
+  katchni: { tiles: [ 0,   1,   2,   4,   7,   9,   5,  10], slots: [0, 1, 0, 1, 0, 1, 0, 1], colours: 2 },
+  godna:   { tiles: [ 8,   0,   9,   1,   6,  11,   7,  10], slots: [0, 1, 0, 1, 0, 1, 0, 1], colours: 2 },
+  tantrik: { tiles: [ 4,   0,   1,   3,   2,   7,   8,  10], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 4 },
+  bharni:  { tiles: [ 0,   2,   3,  10,   6,   4,   7,   8], slots: [0, 2, 1, 3, 0, 2, 1, 3], colours: 4 },
 };
+
+// How many tiles each style's library holds. The SDF renderer (fields.js) only implements the FIRST
+// FOUR of each style, so chain mode can only reach tiles 0-3 today; the SVG library and the baked
+// atlas carry all twelve. Until the atlas lands, tiles 4-11 exist as drawings only.
+export const TILES_PER_STYLE = 12;
+export const SDF_TILE_LIMIT = 4;
 
 export const slotForRow = (slot, row, count) => ((slot + row) % count + count) % count;
