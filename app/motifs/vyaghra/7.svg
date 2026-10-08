@@ -1,0 +1,15 @@
+<!-- vyaghra 7 - broken stripe: one stripe broken into dashes of decreasing length, for the paws. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- the dashes, long to short, each a tapered lens -->
+  <path class="sia" stroke-width="3" stroke-linejoin="round"
+        d="M8,40 C28,33 58,33 88,38 C58,47 28,47 8,40 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M20,56 C36,50 58,50 76,55 C58,62 36,62 20,56 Z"/>
+  <path class="fa" d="M32,70 C44,65 58,65 68,69 C56,75 44,75 32,70 Z"/>
+  <path class="fb" d="M42,82 C48,79 56,79 60,82 C54,86 48,86 42,82 Z"/>
+  <!-- hairline echo above the longest dash, trailing off with it -->
+  <path class="sa" stroke-width="1.6" stroke-linejoin="round" d="M14,30 C34,25 60,25 82,29"/>
+  <!-- bead flung off the long dash's tip -->
+  <circle class="bd" cx="93" cy="38" r="2.2"/>
+</svg>

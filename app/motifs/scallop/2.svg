@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- scallop 2 - scale row divided by a rule: the arc row, then a strong
+       horizontal band. The band is what stops a field of scales reading as noise. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- scales sitting above the rule -->
+  <path class="sia" stroke-width="2.8" stroke-linejoin="round"
+        d="M6,6 C6,22 25,33 50,33 C75,33 94,22 94,6 C75,6 25,6 6,6 Z"/>
+  <circle class="bd" cx="50" cy="19" r="3"/>
+  <!-- the dividing rule, doubled as Madhubani does -->
+  <rect class="fi" x="0" y="46" width="100" height="4.5"/>
+  <rect class="fi" x="0" y="54" width="100" height="1.8"/>
+  <!-- scales below the rule, offset half a cell so the rows interlock -->
+  <path class="sib" stroke-width="2.8" stroke-linejoin="round"
+        d="M-8,64 C-8,80 18,92 50,92 C82,92 108,80 108,64 C82,64 18,64 -8,64 Z"/>
+  <circle class="bd" cx="50" cy="78" r="3"/>
+</svg>

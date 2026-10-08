@@ -1,0 +1,21 @@
+<!-- kohbar 2 - bamboo: three gently curving stalks with barred nodes and two leaves near the crown. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- three stalks, each with a slight natural bow -->
+  <path class="sa" stroke-width="3.4" stroke-linejoin="round" d="M30,98 C28,74 33,48 29,20"/>
+  <path class="sa" stroke-width="3.4" stroke-linejoin="round" d="M52,98 C54,72 47,50 52,10"/>
+  <path class="sa" stroke-width="3.4" stroke-linejoin="round" d="M72,98 C70,76 75,56 71,30"/>
+  <!-- nodes: short thick bars across the stalks -->
+  <rect class="fi" x="23" y="62" width="13" height="3.6"/>
+  <rect class="fi" x="23" y="38" width="12" height="3.4"/>
+  <rect class="fi" x="45" y="70" width="13" height="3.6"/>
+  <rect class="fi" x="46" y="44" width="12" height="3.4"/>
+  <rect class="fi" x="65" y="58" width="13" height="3.6"/>
+  <!-- two leaves sprouting near the crown -->
+  <path class="sib" stroke-width="2" stroke-linejoin="round"
+        d="M52,14 C60,6 70,4 78,8 C70,13 60,16 52,14 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round"
+        d="M29,24 C22,18 14,17 7,20 C14,25 22,27 29,24 Z"/>
+  <!-- bead where the middle stalk meets the ground -->
+  <circle class="bd" cx="52" cy="92" r="3"/>
+</svg>

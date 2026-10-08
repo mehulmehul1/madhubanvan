@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<!-- godna 6 - comma marks: small teardrop strokes all leaning the same way, for the paws. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="fb" d="M26,26 C30,25 32,28 31,31 C30,35 27,38 23,40 C26,39 30,36 31,32 C32,29 30,26 26,26 Z"/>
+  <path class="fa" d="M52,24 C56,23 58,26 57,29 C56,33 53,36 49,38 C52,37 56,34 57,30 C58,27 56,24 52,24 Z"/>
+  <path class="sib" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        d="M74,30 C78,29 80,32 79,35 C78,39 75,42 71,44 C74,43 78,40 79,36 C80,33 78,30 74,30 Z"/>
+  <path class="sia" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        d="M36,60 C40,59 42,62 41,65 C40,69 37,72 33,74 C36,73 40,70 41,66 C42,63 40,60 36,60 Z"/>
+  <path class="fb" d="M62,62 C66,61 68,64 67,67 C66,71 63,74 59,76 C62,75 66,72 67,68 C68,65 66,62 62,62 Z"/>
+  <circle class="bd" cx="82" cy="66" r="2.6"/>
+</svg>

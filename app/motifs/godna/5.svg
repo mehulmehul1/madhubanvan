@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<!-- godna 5 - concentric dots: a centre dot ringed by larger dots, like a target, a spare. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="sa" stroke-width="2.4" stroke-linecap="round"
+        d="M50,16 C66,16 82,30 83,48 C84,66 68,82 50,82 C32,82 17,67 18,49"/>
+  <circle class="sia" stroke-width="2.2" stroke-linecap="round" cx="50" cy="49" r="4.2"/>
+  <circle class="fb" cx="50" cy="29" r="4.4"/>
+  <circle class="fa" cx="68" cy="39" r="3.6"/>
+  <circle class="fb" cx="68" cy="60" r="4.2"/>
+  <circle class="fa" cx="50" cy="69" r="3.8"/>
+  <circle class="fb" cx="32" cy="60" r="4.5"/>
+  <circle class="fa" cx="32" cy="39" r="3.5"/>
+</svg>

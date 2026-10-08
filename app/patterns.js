@@ -73,8 +73,10 @@ function art(m, pal) {
 }
 
 function tile(m, pal, caption, sub, spare = false) {
+  // the src link opens the raw file: that IS the source of truth, and it is what you edit
+  const src = m.src ? `<a class="src" href="${esc(m.src)}" target="_blank" title="open the raw SVG">src</a>` : '';
   return `<div class="tile${spare ? ' spare' : ''}"><div class="art">${art(m, pal)}</div>` +
-    `<div class="cap"><b>${esc(caption)}</b><em>${esc(sub ?? m.key)}</em></div></div>`;
+    `<div class="cap"><b>${esc(caption)}</b><em>${esc(sub ?? m.key)}</em>${src}</div></div>`;
 }
 
 // ---- page --------------------------------------------------------------------------------------

@@ -1,0 +1,12 @@
+<!-- tantrik 2 - opposed triangles: an hourglass of two bowed-side triangles meeting apex to apex at the waist, A above and B below, a bead on each top corner and a ringed waist with a filled B core. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M15,28 C9.5,43 9.5,57 15,72"/>
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M85,28 C90.5,43 90.5,57 85,72"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round" d="M24,16 C28,28 36,40 50,50 C64,40 72,28 76,16 C60,10.5 40,10.5 24,16 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round" d="M24,84 C28,72 36,60 50,50 C64,60 72,72 76,84 C60,89.5 40,89.5 24,84 Z"/>
+  <circle class="bd" cx="24" cy="16" r="2.8"/>
+  <circle class="bd" cx="76" cy="16" r="2.8"/>
+  <circle class="si" stroke-width="2" stroke-linejoin="round" cx="50" cy="50" r="4.6"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" d="M45.8,47.2 C47.3,50 48.7,52.3 50,54.2 C51.3,52.3 52.7,50 54.2,47.2 C52,46.2 48,46.2 45.8,47.2 Z"/>
+</svg>

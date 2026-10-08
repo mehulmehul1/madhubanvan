@@ -1,0 +1,28 @@
+<!-- bharni 6 - filled sun: a solid rayed disc, rays alternating A and B, for the paws. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- eight chunky flame rays, alternating fill A and fill B, bleeding past the edges -->
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M50,24 C46,14 46,6 48,-4 C52,-4 56,4 54,14 C53,19 52,22 50,24 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M68,32 C74,26 80,20 86,14 C89,17 87,24 82,29 C78,33 72,34 68,32 Z"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M76,50 C86,48 94,48 104,50 C104,54 94,56 86,54 C81,53 78,52 76,50 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M68,68 C74,74 80,80 86,86 C83,89 76,87 71,82 C67,78 66,72 68,68 Z"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M50,76 C54,86 54,94 52,104 C48,104 44,96 46,86 C47,81 48,78 50,76 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M32,68 C26,74 20,80 14,86 C11,83 13,76 18,71 C22,67 28,66 32,68 Z"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M24,50 C14,52 6,52 -4,50 C-4,46 6,44 14,46 C19,47 22,48 24,50 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M32,32 C26,26 20,20 14,14 C17,11 24,13 29,18 C33,22 34,28 32,32 Z"/>
+  <!-- the solid disc in fill A -->
+  <circle class="sia" cx="50" cy="50" r="26" stroke-width="3.4" stroke-linejoin="round"/>
+  <!-- concentric ring over the disc -->
+  <circle class="si" cx="50" cy="50" r="19" stroke-width="1.2" stroke-linejoin="round"/>
+  <!-- inner boss in fill B -->
+  <circle class="sib" cx="50" cy="50" r="11" stroke-width="2.6" stroke-linejoin="round"/>
+  <circle class="bd" cx="50" cy="50" r="4"/>
+</svg>

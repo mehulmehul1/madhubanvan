@@ -1,0 +1,19 @@
+<!-- vyaghra 4 - flame stripe: a vertical flame with barbs flicking off a centre vein, for the wing. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- the flame body: needle tip at the crown, wide belly, forked root -->
+  <path class="sia" stroke-width="3.5" stroke-linejoin="round"
+        d="M50,-10 C64,10 72,32 68,58 C66,74 61,84 63,110 L53,90 C51,86 47,86 45,90 L35,110 C37,84 30,72 30,56 C30,32 38,10 50,-10 Z"/>
+  <!-- inner tongue in B floating inside the flame -->
+  <path class="sib" stroke-width="2.4" stroke-linejoin="round"
+        d="M50,18 C58,30 61,44 58,60 C56,68 53,74 54,92 L50,80 C49,77 47,77 46,80 L42,92 C43,74 39,66 40,54 C41,40 44,28 50,18 Z"/>
+  <!-- centre vein running the length of the flame -->
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M50,22 C56,38 57,58 50,76"/>
+  <!-- barb flicks off the vein toward each flank -->
+  <path class="si" stroke-width="1.6" stroke-linejoin="round" d="M44,44 C39,46 35,49 32,53"/>
+  <path class="si" stroke-width="1.6" stroke-linejoin="round" d="M56,44 C61,46 65,49 68,53"/>
+  <!-- small A sliver breathing beside the flame -->
+  <path class="fa" d="M28,60 C34,56 40,56 44,60 C40,66 34,68 28,66 C26,64 26,62 28,60 Z"/>
+  <!-- bead seated on the vein at the belly's widest point -->
+  <circle class="bd" cx="50" cy="64" r="3"/>
+</svg>

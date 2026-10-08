@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- bharni 0 - the filled lotus: one solid face-on bloom, outer petal mass in fill A,
+       inner ring in fill B, ink veins punched back out of the fills, centre bead. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- outer petal mass: central bud, side petals and broad outer petals in one silhouette -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M50,97 C28,90 10,72 8,46 C16,51 26,52 33,48 C29,35 32,20 43,9 C47,17 49,22 50,28 C51,22 53,17 57,9 C68,20 71,35 67,48 C74,52 84,51 92,46 C90,72 72,90 50,97 Z"/>
+  <!-- inner petal ring in fill B -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M50,82 C36,77 26,66 25,50 C30,53 36,54 40,52 C38,43 40,33 47,26 C49,31 49,35 50,39 C51,35 51,31 53,26 C60,33 62,43 60,52 C64,54 70,53 75,50 C74,66 64,77 50,82 Z"/>
+  <!-- solid side petals giving the outer ring real fill mass, ink outline on top -->
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M30,80 C21,72 17,60 21,47 C27,51 32,58 33,66 C34,72 32,77 30,80 Z"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M70,80 C79,72 83,60 79,47 C73,51 68,58 67,66 C66,72 68,77 70,80 Z"/>
+  <!-- solid inner petals in fill B -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M41,71 C35,65 33,56 36,48 C40,51 43,57 43,63 C43,67 42,70 41,71 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M59,71 C65,65 67,56 64,48 C60,51 57,57 57,63 C57,67 58,70 59,71 Z"/>
+  <!-- ink veins drawn back over the fills -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M50,76 C50,64 50,52 50,42"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M38,70 C34,61 32,52 33,45"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M62,70 C66,61 68,52 67,45"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M25,60 C22,53 22,46 26,40"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M75,60 C78,53 78,46 74,40"/>
+  <circle class="bd" cx="50" cy="68" r="4"/>
+</svg>

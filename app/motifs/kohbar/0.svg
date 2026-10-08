@@ -1,0 +1,24 @@
+<!-- kohbar 0 - lotus rosette seen face-on: outer ring of 8 broad petals alternating A/B, inner ring of 8 narrow petals offset half a step, bead heart. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- outer ring: 8 broad teardrop petals, alternating fill A and fill B -->
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(45 50 50)"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(90 50 50)"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(135 50 50)"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(180 50 50)"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(225 50 50)"/>
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(270 50 50)"/>
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round" d="M50,46 C42,36 41,23 50,10 C59,23 58,36 50,46 Z" transform="rotate(315 50 50)"/>
+  <!-- inner ring: 8 narrower petals, offset half a step, counter-toned -->
+  <path class="sib" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(22.5 50 50)"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(67.5 50 50)"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(112.5 50 50)"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(157.5 50 50)"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(202.5 50 50)"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(247.5 50 50)"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(292.5 50 50)"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" d="M50,47 C46.5,41 46.5,34 50,28 C53.5,34 53.5,41 50,47 Z" transform="rotate(337.5 50 50)"/>
+  <!-- heart of the lotus -->
+  <circle class="bd" cx="50" cy="50" r="4"/>
+</svg>

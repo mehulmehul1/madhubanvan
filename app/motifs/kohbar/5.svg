@@ -1,0 +1,24 @@
+<!-- kohbar 5 - turtle: domed segmented shell, head out, four legs, a spare. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- domed carapace -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M18,66 C20,44 36,30 52,30 C68,30 82,46 82,66 C64,74 36,74 18,66 Z"/>
+  <!-- inner shell panel -->
+  <path class="sia" stroke-width="2" stroke-linejoin="round"
+        d="M30,62 C32,48 42,40 52,40 C62,40 70,48 72,62 C58,66 44,66 30,62 Z"/>
+  <!-- shell seams: one spine, one crossbar -->
+  <path class="si" stroke-width="1.6" stroke-linejoin="round"
+        d="M52,40 C52,48 52,55 52,63 M38,46 C44,52 60,52 66,46"/>
+  <!-- head poking out to the right -->
+  <path class="sia" stroke-width="2" stroke-linejoin="round"
+        d="M82,58 C88,55 94,57 95,62 C96,67 90,70 84,67 C82,64 81,61 82,58 Z"/>
+  <!-- four stub legs under the rim, one element -->
+  <path class="sia" stroke-width="1.8" stroke-linejoin="round"
+        d="M26,68 C22,70 20,74 22,77 C25,79 30,77 30,73 C30,70 28,67 26,68 Z M42,71 C38,73 36,77 38,80 C41,82 46,80 46,76 C46,73 44,70 42,71 Z M58,71 C54,73 52,77 54,80 C57,82 62,80 62,76 C62,73 60,70 58,71 Z M72,67 C68,69 66,73 68,76 C71,78 76,76 76,72 C76,69 74,66 72,67 Z"/>
+  <!-- short tail flick at the rear -->
+  <path class="si" stroke-width="1.8" stroke-linejoin="round" d="M18,64 C14,66 11,69 9,73"/>
+  <!-- eye and a bead on the shell crown -->
+  <circle class="bd" cx="89" cy="62" r="2.4"/>
+  <circle class="bd" cx="52" cy="51" r="2.6"/>
+</svg>

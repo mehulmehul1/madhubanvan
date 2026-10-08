@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- vyaghra 3 - band plus zigzag: a fill-B band with a smooth upper edge and
+       a five-tooth sawtooth lower edge, an A-colour echo tracing the smooth
+       edge, beads dropped below two tooth tips, one ink dot in the open sky. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- the band: smooth crown, sawtooth root -->
+  <path class="sib" stroke-width="3" stroke-linejoin="round"
+        d="M-8,32 C25,26 65,24 108,26 L104,42 L96,60 L88,42 L78,60 L68,42 L58,60 L48,42 L38,60 L28,42 L18,60 L8,42 L-8,48 Z"/>
+  <!-- sub-band in A nested inside the B band, above the tooth line -->
+  <path class="sia" stroke-width="1.8" stroke-linejoin="round"
+        d="M8,34 C35,30 68,29 94,31 L93,36 C68,34 36,35 9,39 Z"/>
+  <!-- echo in A along the smooth crown -->
+  <path class="sa" stroke-width="1.8" stroke-linejoin="round" d="M4,32 C35,27 70,26 96,28"/>
+  <!-- beads below two of the tooth tips -->
+  <circle class="bd" cx="78" cy="66" r="2.2"/>
+  <circle class="bd" cx="38" cy="66" r="2.2"/>
+  <!-- lone ink dot in the open ground above the band -->
+  <circle class="fi" cx="50" cy="12" r="2"/>
+</svg>

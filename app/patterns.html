@@ -34,9 +34,13 @@
     .tile.spare { border-style: dashed; border-color: rgba(0,0,0,.38); }
     .tile.spare .cap em { color: #8a5a1a; font-weight: 600; }
     .tile .art { overflow: hidden; }
-    .tile .cap { font-size: 10px; padding: 3px 6px; opacity: .82; border-top: 1px solid rgba(0,0,0,.12); display: flex; justify-content: space-between; gap: 6px; }
+    .tile .cap { font-size: 10px; padding: 3px 6px; opacity: .82; border-top: 1px solid rgba(0,0,0,.12); display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
     .tile .cap b { font-weight: 600; }
     .tile .cap em { font-style: normal; opacity: .6; }
+    /* src link: opens the raw SVG, which is the file you actually edit */
+    .tile .cap a.src { margin-left: auto; font-size: 9px; color: #6a4a12; text-decoration: none;
+                       border: 1px solid rgba(0,0,0,.25); padding: 0 3px; border-radius: 2px; }
+    .tile .cap a.src:hover { background: #241d15; color: #f3ecdf; }
 
     /* ── THE ROLE CONTRACT ──────────────────────────────────────────────────────────────────────
        A motif never hardcodes a colour. These nine classes are the only paint a

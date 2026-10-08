@@ -1,0 +1,17 @@
+<!-- bharni 8 - filled feather: a solid peacock feather with an eye at the tip, for the fin. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- long vane swelling toward the tip, quill at lower left -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M28,96 C20,72 26,48 44,30 C50,24 56,18 62,12 C66,16 66,24 62,30 C70,32 74,40 72,48 C68,66 48,86 28,96 Z"/>
+  <!-- the eye at the tip in fill B -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M62,12 C54,14 50,22 53,29 C56,35 65,35 68,29 C71,23 68,14 62,12 Z"/>
+  <!-- shaft running the vane's length -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M30,94 C40,70 50,48 58,30"/>
+  <!-- one barb arc across the vane -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M38,66 C46,64 54,64 62,66"/>
+  <!-- ragged fringe at the quill in fill B -->
+  <path class="fb" d="M28,96 C26,88 26,82 28,76 C32,82 34,88 34,94 Z"/>
+  <circle class="bd" cx="60" cy="23" r="2.6"/>
+</svg>

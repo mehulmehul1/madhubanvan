@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<!-- godna 7 - diamond lattice: outlined diamonds in a staggered grid, for the wing. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="sia" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+        d="M50,18 C58,30 68,40 78,50 C68,60 58,70 50,82 C42,70 32,60 22,50 C32,40 42,30 50,18 Z"/>
+  <path class="sa" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+        d="M-2,78 C6,70 12,64 18,58 C12,52 6,46 0,38"/>
+  <circle class="fb" cx="50" cy="50" r="4.4"/>
+  <circle class="bd" cx="50" cy="18" r="2.6"/>
+</svg>

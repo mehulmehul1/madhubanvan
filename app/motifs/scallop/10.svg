@@ -1,0 +1,13 @@
+<!-- scallop 10 - triple scale stack: three scales of decreasing size, nested like a roof. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- the row above bleeding in, so the stack reads imbricated -->
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M20,4 C20,14 34,22 50,22 C66,22 80,14 80,4"/>
+  <!-- outer, middle and inner scales, each tucked inside the last -->
+  <path class="sia" stroke-width="3" stroke-linejoin="round"
+        d="M8,30 C8,56 28,75 50,75 C72,75 92,56 92,30 C68,30 32,30 8,30 Z"/>
+  <path class="sib" stroke-width="2.4" stroke-linejoin="round"
+        d="M24,32 C24,50 36,62 50,62 C64,62 76,50 76,32 C60,32 40,32 24,32 Z"/>
+  <path class="fa" d="M37,34 C37,44 43,51 50,51 C57,51 63,44 63,34 C55,34 45,34 37,34 Z"/>
+  <circle class="bd" cx="50" cy="42" r="2.6"/>
+</svg>

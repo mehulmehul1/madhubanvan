@@ -1,0 +1,13 @@
+<!-- katchni 0 - hand-ruled parallel fill: 8 wobbling lines, unevenly spaced, alternating ink and A-colour on a fill-B ground. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <rect class="fb" x="0" y="0" width="100" height="100"/>
+  <path class="si" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" d="M-10,8 C8,5 24,4.5 42,6.5 C62,8.5 88,9 110,6"/>
+  <path class="sa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M-10,16 C12,18.5 30,19 48,17 C68,15 90,14.5 110,17"/>
+  <path class="si" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M-10,26 C15,23.5 35,23 55,25.5 C75,28 95,27.5 110,25"/>
+  <path class="sa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M-10,35 C10,37.5 28,38.5 46,36.5 C66,34.5 90,34 110,36.5"/>
+  <path class="si" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M-10,48 C14,45.5 32,45 52,47.5 C72,50 92,49.5 110,47"/>
+  <path class="sa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M-10,58 C12,60.5 30,61.5 50,59.5 C70,57.5 90,57 110,59.5"/>
+  <path class="si" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" d="M-10,73 C16,70.5 36,70 56,72.5 C76,75 96,74.5 110,72"/>
+  <path class="sa" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,85 C14,87.5 34,88.5 54,86 C74,83.5 94,84 110,86.5"/>
+</svg>

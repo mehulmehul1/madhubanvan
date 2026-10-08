@@ -8,8 +8,8 @@
 // Reads the build-time contract aMad1 = [island, designGroup, axisMode, spineT], aMad2 = [radial, tailT].
 import * as THREE from 'three/webgpu';
 import {
-  Fn, If, Loop, uniform, select, vec2, vec3, vec4, float, mix, smoothstep, clamp, abs, floor, fract, step,
-  dot, normalize, length, max, min, hash, fwidth, cameraPosition, texture, attribute, mod,
+  Fn, If, Loop, uniform, select, vec2, vec3, vec4, float, int, mix, smoothstep, clamp, abs, floor, fract,
+  step, dot, normalize, length, max, min, hash, fwidth, cameraPosition, texture, attribute, mod,
 } from 'three/tsl';
 import { PALETTES, STYLES, MAD_SEED_TEXELS } from './params.js';
 import { STYLE_ZONES } from './zones.js';
@@ -30,6 +30,31 @@ export function createMadhubani(opts = {}) {
   // tiles, hatch, outline, wobble, base colour count, seed
   const uP = uniform(v4(0.085, 0.072, 3, 0.10));
   const uP2 = uniform(v4(0.03, 3, 0.5, 0)); // wobble, base colours, rim stroke scale
+  // Layer base offset into the stacked all-style motif array. Every style's 12 motifs occupy a
+  // contiguous 12-layer block, so switching style is this one integer — no material rebuild, no
+  // texture rebind. Declared BEFORE setStyle(), which assigns it.
+  const uAtlasOffset = uniform(0, 'int');
+  // Metres per motif repeat, in BODY SPACE. Both pattern axes are arc lengths in metres, so this one
+  // number sets the motif scale for the whole animal with no distortion anywhere. ~6 cm puts roughly
+  // 25 repeats along a 1.5 m body: fine enough to read as woven texture at a distance (which is how
+  // the references look) while still resolving into individual motifs on approach, thanks to mips.
+  const uMotifM = uniform(0.06);
+  // Zone size, in units of the baked Voronoi cell. The cell is ~0.085 m, so one authored motif at
+  // 1:1 lands at ~0.85 px strokes on a 1.5 m animal — sub-pixel, which reads as grey noise. Growing
+  // the CELLS (not the motif) fixes it: a zone then spans several cells, so a motif tiles a few
+  // times INSIDE a zone panel and reads as a continuous field of drawing rather than as one cropped
+  // blob per cell. Grid dims shrink by the same factor so world coverage is unchanged.
+  const zoneScale = opts.zoneScale ?? 1.0;
+  // How many Voronoi cells one motif repeat spans. The cell is ~0.085 m, so at 1 a motif's strokes
+  // land near 0.85 px on a 1.5 m animal — sub-pixel, which reads as grey noise. At 3 the strokes are
+  // ~2.6 px and the drawing is legible. Growing cells instead of the motif was tried and is worse:
+  // it flattens each zone into a single colour patch.
+  const motifScale = Math.max(0.25, opts.motifScale ?? 3.0);
+  // Baked SVG motifs for `bomb` mode (see atlas.js). When present this REPLACES the SDF tiles: one
+  // layer per motif, so all 12 authored motifs per style become reachable. Left null the SDF path
+  // still runs, which is why a missing bake degrades instead of breaking the coat.
+  const atlasTex = opts.atlas?.texture ?? null;
+  const atlasOffsets = opts.atlas?.offsets ?? {};
   const uZT = uniform(v4(0, 0, 0, 0));   // zone tile ids 0-3
   const uZT2 = uniform(v4(0, 0, 0, 0));  // zone tile ids 4-7
   const uZS = uniform(v4(0, 0, 0, 0));   // zone colour slots 0-3
@@ -65,6 +90,7 @@ export function createMadhubani(opts = {}) {
     uZT2.value.set(z.tiles[4], z.tiles[5], z.tiles[6], z.tiles[7]);
     uZS.value.set(z.slots[0], z.slots[1], z.slots[2], z.slots[3]);
     uZS2.value.set(z.slots[4], z.slots[5], z.slots[6], z.slots[7]);
+    uAtlasOffset.value = atlasOffsets[key] ?? 0;
   }
   function setSeed(s) { uSeed.value = s >>> 0; }
   function setDebug(v) { uDbg.value.x = typeof v === 'number' ? v : (v ? 1 : 0); }
@@ -75,11 +101,17 @@ export function createMadhubani(opts = {}) {
   setStyle(opts.styleKey ?? 'scallop');
   setSeed(opts.seed ?? 7);
   if (mode === 'bomb') {
-    uGrid.value.set(grid.cell, grid.origin[0], grid.origin[1], grid.origin[2]);
-    uGridDim.value.set(grid.dims[0], grid.dims[1], grid.dims[2], grid.nS);
+    const zs = Math.max(0.5, zoneScale);
+    uGrid.value.set(grid.cell * zs, grid.origin[0], grid.origin[1], grid.origin[2]);
+    uGridDim.value.set(
+      Math.max(1, Math.ceil(grid.dims[0] / zs)),
+      Math.max(1, Math.ceil(grid.dims[1] / zs)),
+      Math.max(1, Math.ceil(grid.dims[2] / zs)),
+      grid.nS,
+    );
     uGridWH.value.set(grid.gridW, grid.gridH);
     uSeedWH.value.set(grid.seedW, grid.seedH);
-    uTile.value = grid.tile;
+    uTile.value = grid.tile * zs;
   }
 
   const n2 = Fn(([p]) => {
@@ -170,14 +202,32 @@ export function createMadhubani(opts = {}) {
       // zone -> tile + colour slot
       const tileId = select(dg.lessThan(0.5), uZT.x, select(dg.lessThan(1.5), uZT.y, select(dg.lessThan(2.5), uZT.z, select(dg.lessThan(3.5), uZT.w, select(dg.lessThan(4.5), uZT2.x, select(dg.lessThan(5.5), uZT2.y, select(dg.lessThan(6.5), uZT2.z, uZT2.w)))))));
       const slot = select(dg.lessThan(0.5), uZS.x, select(dg.lessThan(1.5), uZS.y, select(dg.lessThan(2.5), uZS.z, select(dg.lessThan(3.5), uZS.w, select(dg.lessThan(4.5), uZS2.x, select(dg.lessThan(5.5), uZS2.y, select(dg.lessThan(6.5), uZS2.z, uZS2.w)))))));
-      const row = fieldTiles(uu, vv, uP.x, uP.y, tileId, uP.z);
-      const fillIdx = slot.add(row.w).mod(ccount);
-      const groundIdx = slot.add(float(2.0)).mod(ccount);
-
-      col = pick(groundIdx);
-      col = mix(col, pick(fillIdx), row.x);
-      col = mix(col, uInk, row.y);
-      col = mix(col, uBead, row.z);
+      // ── Authored SVG motifs, painted in BODY SPACE ────────────────────────────────────────────
+      // `uu` is arc length AROUND the part, `vv` is arc length ALONG it — both in METRES. That is the
+      // whole point: a square motif stays square and uniform-scale everywhere, orientation runs
+      // continuously across the entire surface, rows compress where the body curves away, and the
+      // zone comes from the baked anatomical designGroup. Sampled in a per-seed tangent plane
+      // instead, orientation is discontinuous at every cell boundary — which is what produced the
+      // blobby Voronoi look this replaces.
+      if (atlasTex) {
+        const m = texture(atlasTex, vec2(uu.div(uMotifM), vv.div(uMotifM)))
+          .depth(int(tileId).add(uAtlasOffset));
+        // colour bands step per motif row, as in the references where each row shifts tone
+        const band = floor(vv.div(uMotifM)).mod(2.0);
+        const iA = slot.add(band).mod(ccount);
+        col = pick(slot.add(2.0).mod(ccount));                    // ground
+        col = mix(col, pick(iA.add(1.0).mod(ccount)), m.b);        // fill B under fill A
+        col = mix(col, pick(iA), m.g);                             // fill A
+        col = mix(col, uBead, m.a);                                // beads sit above the fills
+        col = mix(col, uInk, m.r);                                 // ink outline last
+      } else {
+        const row = fieldTiles(uu, vv, uP.x, uP.y, tileId, uP.z);
+        const fillIdx = slot.add(row.w).mod(ccount);
+        col = pick(slot.add(2.0).mod(ccount));
+        col = mix(col, pick(fillIdx), row.x);
+        col = mix(col, uInk, row.y);
+        col = mix(col, uBead, row.z);
+      }
 
       // bold seam where the zone changes (fwidth spikes on the interpolated designGroup)
       const seam = clamp(fwidth(dg), float(0.0), float(1.0)).mul(uP.w.mul(4.0));
@@ -194,15 +244,30 @@ export function createMadhubani(opts = {}) {
       const slot = select(dg.lessThan(0.5), uZS.x, select(dg.lessThan(1.5), uZS.y, select(dg.lessThan(2.5), uZS.z, select(dg.lessThan(3.5), uZS.w, select(dg.lessThan(4.5), uZS2.x, select(dg.lessThan(5.5), uZS2.y, select(dg.lessThan(6.5), uZS2.z, uZS2.w)))))));
       const row = floor(T.w.div(uTile));
       const fillIdx = slot.add(row).mod(ccount);
-      // Drive the AUTHORED style motifs (fields.js) in the seed's tangent plane, offset so the
-      // motif is centred on the seed: one cell == one tile of the style's own pattern. This is what
-      // keeps scallop / kohbar / katchni / godna / tantrik / bharni visually distinct.
-      const t = fieldTiles(u.add(uTile.mul(0.5)), v.add(uTile.mul(0.06)), uTile, uTile, tileId, uP.z);
       const ground = pick(slot.add(2.0).mod(ccount));
-      col = ground;
-      col = mix(col, pick(fillIdx), t.x);
-      col = mix(col, uInk, t.y);
-      col = mix(col, uBead, t.z);
+      if (atlasTex) {
+        // AUTHORED SVG motifs, baked to a role mask: R=ink G=fillA B=fillB A=bead, ground = none.
+        // One motif per layer, picked by the zone's tile id, tiled across the seed's tangent plane.
+        // The UV is deliberately NOT fract()'d: mip level is chosen from screen-space derivatives,
+        // and fract introduces a hard seam that destroys them, which shows up as a mip-level "step"
+        // ring around every motif. RepeatWrapping tiles it correctly instead.
+        const msize = uTile.mul(motifScale);
+        const m = texture(atlasTex, vec2(u.div(msize).add(0.5), v.div(msize).add(0.5)))
+          .depth(int(tileId).add(uAtlasOffset));
+        // painter order: ground -> fill B -> fill A -> bead -> ink, so ink always outlines on top
+        col = ground;
+        col = mix(col, pick(fillIdx.add(1.0).mod(ccount)), m.b);
+        col = mix(col, pick(fillIdx), m.g);
+        col = mix(col, uBead, m.a);
+        col = mix(col, uInk, m.r);
+      } else {
+        // SDF fallback (fields.js, 4 tiles per style) for when no atlas has been baked.
+        const t = fieldTiles(u.add(uTile.mul(0.5)), v.add(uTile.mul(0.06)), uTile, uTile, tileId, uP.z);
+        col = ground;
+        col = mix(col, pick(fillIdx), t.x);
+        col = mix(col, uInk, t.y);
+        col = mix(col, uBead, t.z);
+      }
 
       // NOTE: no Voronoi outline. The cell boundary is invisible scaffolding; the scale rim comes
       // from the motif's own arc (which sits inside the cell), so you see shingled scales, not a

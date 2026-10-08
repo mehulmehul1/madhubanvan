@@ -1,0 +1,18 @@
+<!-- bharni 10 - filled mango leaf: a solid mango leaf with a midrib and vein hatching, for the legs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- long lanceolate blade in fill A, tip toward upper right -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M20,84 C30,60 52,36 84,20 C86,28 80,44 66,60 C52,76 34,86 20,84 Z"/>
+  <!-- inner blade panel in fill B -->
+  <path class="sib" stroke-width="2.4" stroke-linejoin="round"
+        d="M34,74 C42,58 56,44 72,34 C72,42 64,54 52,64 C46,69 40,72 34,74 Z"/>
+  <!-- hooked stem at the base -->
+  <path class="sia" stroke-width="2.4" stroke-linejoin="round"
+        d="M20,84 C14,88 8,90 2,90 C6,84 12,81 18,80 Z"/>
+  <!-- midrib and two side veins over the fills -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M22,82 C40,66 60,46 82,22"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M44,64 C50,60 56,56 62,50"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M56,54 C60,51 64,47 68,42"/>
+  <circle class="bd" cx="76" cy="27" r="2.6"/>
+</svg>

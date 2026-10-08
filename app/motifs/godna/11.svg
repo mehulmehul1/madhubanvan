@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+<!-- godna 11 - dotted border: a pair of rules with a dotted channel between them, for the tail. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="sa" stroke-width="3" stroke-linecap="round" d="M8,33 C30,31 60,32 92,35"/>
+  <path class="si" stroke-width="3" stroke-linecap="round" d="M8,67 C30,69 60,68 92,65"/>
+  <circle class="fb" cx="30" cy="50" r="3.6"/>
+  <circle class="fa" cx="50" cy="49" r="4.1"/>
+  <circle class="fb" cx="70" cy="50" r="3.3"/>
+  <circle class="bd" cx="87" cy="50" r="2.4"/>
+</svg>

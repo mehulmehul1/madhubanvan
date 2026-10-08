@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- bharni 1 - the filled fish: solid Mithila fish in profile, body in fill A,
+       fanned tail in fill B, bead eye, ink gill and scale arcs over the body. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- fanned forked tail in fill B, tucked behind the body -->
+  <path class="sib" stroke-width="3" stroke-linejoin="round"
+        d="M64,50 C72,40 82,32 96,27 C93,37 93,44 94,50 C93,56 93,63 96,73 C82,68 72,60 64,50 Z"/>
+  <!-- solid body in fill A, blunt head left, tapering to the tail -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M4,50 C4,33 24,22 48,22 C58,22 64,25 69,29 C65,41 65,59 69,71 C64,75 58,78 48,78 C24,78 4,67 4,50 Z"/>
+  <!-- small dorsal fin riding the back -->
+  <path class="sib" stroke-width="2.4" stroke-linejoin="round"
+        d="M36,23 C42,14 51,9 60,9 C56,15 54,19 53,23 C47,21 41,21 36,23 Z"/>
+  <!-- gill arc and two scale arcs in ink over the body fill -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M26,32 C30,42 30,58 26,68"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M40,30 C44,42 44,58 40,70"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M53,31 C56,42 56,58 53,69"/>
+  <circle class="bd" cx="15" cy="46" r="3.4"/>
+</svg>

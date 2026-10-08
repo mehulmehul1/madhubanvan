@@ -1,0 +1,20 @@
+<!-- tantrik 9 - diamond grid: a lattice of diamonds with a bead in each cell. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <rect class="si" stroke-width="2.4" stroke-linejoin="round" x="8" y="8" width="84" height="84"/>
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M42,8 C32,20 20,32 8,42"/>
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M92,8 C64,36 36,64 8,92"/>
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M92,58 C80,70 70,80 58,92"/>
+  <path class="sa" stroke-width="2" stroke-linejoin="round" d="M8,58 C20,70 30,80 42,92"/>
+  <path class="sa" stroke-width="2" stroke-linejoin="round" d="M8,8 C38,38 62,62 92,92"/>
+  <path class="sa" stroke-width="2" stroke-linejoin="round" d="M58,8 C70,20 80,30 92,42"/>
+  <path class="fb" d="M8,8 L42,8 C30,13 19,24 13,36 L8,42 Z"/>
+  <path class="fb" transform="rotate(90 50 50)" d="M8,8 L42,8 C30,13 19,24 13,36 L8,42 Z"/>
+  <path class="fb" transform="rotate(180 50 50)" d="M8,8 L42,8 C30,13 19,24 13,36 L8,42 Z"/>
+  <path class="fb" transform="rotate(270 50 50)" d="M8,8 L42,8 C30,13 19,24 13,36 L8,42 Z"/>
+  <path class="fb" d="M50,42 C53,46 53,54 50,58 C47,54 47,46 50,42 Z"/>
+  <circle class="bd" cx="25" cy="25" r="2.6"/>
+  <circle class="bd" cx="75" cy="25" r="2.6"/>
+  <circle class="bd" cx="25" cy="75" r="2.6"/>
+  <circle class="bd" cx="75" cy="75" r="2.6"/>
+</svg>

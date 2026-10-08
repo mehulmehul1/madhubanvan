@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- bharni 3 - the filled medallion: solid disc in fill A, concentric inner ring in
+       fill B, ten short radial ink ticks between the two, centre bead. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- the great disc in fill A -->
+  <circle class="sia" cx="50" cy="50" r="44" stroke-width="3.4" stroke-linejoin="round"/>
+  <!-- concentric inner ring in fill B -->
+  <circle class="sib" cx="50" cy="50" r="24" stroke-width="2.6" stroke-linejoin="round"/>
+  <!-- six radial ticks bridging disc and ring, at 60-degree spacing -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M78,50 L90,50"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M64,74.2 L70,84.6"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M36,74.2 L30,84.6"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M22,50 L10,50"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M36,25.8 L30,15.4"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M64,25.8 L70,15.4"/>
+  <!-- six fill-B jewels set in the annulus between the ticks -->
+  <circle class="fb" cx="79.4" cy="67" r="3.2"/>
+  <circle class="fb" cx="50" cy="84" r="3.2"/>
+  <circle class="fb" cx="20.6" cy="67" r="3.2"/>
+  <circle class="fb" cx="20.6" cy="33" r="3.2"/>
+  <circle class="fb" cx="50" cy="16" r="3.2"/>
+  <circle class="fb" cx="79.4" cy="33" r="3.2"/>
+  <circle class="bd" cx="50" cy="50" r="4.5"/>
+</svg>

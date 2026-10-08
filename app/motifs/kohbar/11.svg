@@ -1,0 +1,17 @@
+<!-- kohbar 11 - conch / shankh: spiralled shell with radiating ridges, a spare. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- shell body: sharp spire swelling to a flared lip -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M32,10 C38,16 42,24 44,32 C58,38 70,50 73,64 C75,76 68,86 56,88 C42,90 28,84 22,72 C16,60 18,46 26,36 C28,27 29,18 32,10 Z"/>
+  <!-- inner whorl curling to the core -->
+  <path class="sia" stroke-width="2" stroke-linejoin="round"
+        d="M40,30 C48,32 54,38 56,46 C57,54 52,62 44,64 C36,66 28,62 26,54 C25,47 29,41 35,40 C40,39 44,42 44,47 C44,51 41,54 37,53"/>
+  <!-- radiating ridges across the swell, one element -->
+  <path class="si" stroke-width="1.6" stroke-linejoin="round"
+        d="M48,44 C54,50 58,56 60,64 M42,40 C46,48 48,56 48,66 M54,50 C60,54 64,60 65,68"/>
+  <!-- lip line along the opening -->
+  <path class="sa" stroke-width="2" stroke-linejoin="round" d="M68,62 C74,68 75,78 68,86"/>
+  <!-- bead set by the spire -->
+  <circle class="bd" cx="34" cy="22" r="2.4"/>
+</svg>

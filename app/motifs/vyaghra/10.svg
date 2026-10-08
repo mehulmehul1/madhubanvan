@@ -1,0 +1,20 @@
+<!-- vyaghra 10 - thick-thin rhythm: alternating thick and hairline stripes, a rhythm band for the legs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- first thick band in A -->
+  <path class="sia" stroke-width="3" stroke-linejoin="round"
+        d="M-8,22 C28,14 68,14 108,18 C68,30 28,30 -8,26 Z"/>
+  <!-- hairline between the bands, in A to stay light -->
+  <path class="sa" stroke-width="1.4" stroke-linejoin="round" d="M-8,36 C30,32 70,32 108,30"/>
+  <!-- second thick band in B -->
+  <path class="sib" stroke-width="3" stroke-linejoin="round"
+        d="M-8,50 C30,44 70,44 108,48 C70,60 30,60 -8,55 Z"/>
+  <!-- echo line inside the B band -->
+  <path class="si" stroke-width="1.5" stroke-linejoin="round" d="M4,51 C34,48 64,48 96,50"/>
+  <!-- hairline below the B band -->
+  <path class="sa" stroke-width="1.4" stroke-linejoin="round" d="M-8,66 C30,62 70,62 108,60"/>
+  <!-- third thick band in A, un-outlined to vary the weight -->
+  <path class="fa" d="M-8,78 C30,72 70,72 108,76 C70,88 30,88 -8,83 Z"/>
+  <!-- bead floating in the open ground above the rhythm -->
+  <circle class="bd" cx="50" cy="8" r="2.4"/>
+</svg>

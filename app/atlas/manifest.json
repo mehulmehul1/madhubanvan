@@ -1,0 +1,44 @@
+{
+  "scallop": {
+    "file": "scallop.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  },
+  "vyaghra": {
+    "file": "vyaghra.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  },
+  "kohbar": {
+    "file": "kohbar.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  },
+  "katchni": {
+    "file": "katchni.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  },
+  "godna": {
+    "file": "godna.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  },
+  "tantrik": {
+    "file": "tantrik.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  },
+  "bharni": {
+    "file": "bharni.bin",
+    "layers": 12,
+    "cellSize": 256,
+    "bytes": 3145760
+  }
+}

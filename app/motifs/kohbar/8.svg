@@ -1,0 +1,23 @@
+<!-- kohbar 8 - double fish: two fish circling a shared centre, a spare. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- upper fish, snout left -->
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M8,38 C24,20 52,18 70,30 C52,44 24,50 8,38 Z"/>
+  <!-- its forked tail -->
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round"
+        d="M68,27 C76,21 82,15 90,12 C87,20 86,25 88,30 C86,35 87,40 90,46 C82,43 76,37 68,34 Z"/>
+  <!-- lower fish, the half-turn echo -->
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M8,38 C24,20 52,18 70,30 C52,44 24,50 8,38 Z" transform="rotate(180 50 50)"/>
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round"
+        d="M68,27 C76,21 82,15 90,12 C87,20 86,25 88,30 C86,35 87,40 90,46 C82,43 76,37 68,34 Z" transform="rotate(180 50 50)"/>
+  <!-- gill arcs, one per fish -->
+  <path class="si" stroke-width="1.8" stroke-linejoin="round" d="M32,26 C29,32 29,40 32,46"/>
+  <path class="si" stroke-width="1.8" stroke-linejoin="round" d="M32,26 C29,32 29,40 32,46" transform="rotate(180 50 50)"/>
+  <!-- ink-dot eyes -->
+  <circle class="fi" cx="22" cy="34" r="2.6"/>
+  <circle class="fi" cx="78" cy="66" r="2.6"/>
+  <!-- the shared centre they swim around -->
+  <circle class="bd" cx="50" cy="50" r="3"/>
+</svg>

@@ -1,0 +1,24 @@
+<!-- kohbar 7 - tree of life: branching canopy sheltering a pair of birds, a spare. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- broad cloud canopy -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M50,12 C66,12 80,24 80,40 C80,52 68,58 56,56 C46,60 30,56 26,44 C23,30 34,12 50,12 Z"/>
+  <!-- forking trunk rooted at the base -->
+  <path class="sia" stroke-width="2.4" stroke-linejoin="round"
+        d="M45,96 C47,82 43,72 38,62 C42,59 46,59 48,61 C50,69 50,69 52,61 C54,59 58,59 60,62 C55,72 53,82 55,96 Z"/>
+  <!-- two limbs reaching into the crown -->
+  <path class="si" stroke-width="2" stroke-linejoin="round"
+        d="M48,64 C46,54 42,48 36,44 M52,64 C54,54 58,48 64,44"/>
+  <!-- perched birds, left and right -->
+  <path class="sia" stroke-width="1.8" stroke-linejoin="round"
+        d="M30,38 C31,32 37,29 41,32 C43,34 42,38 39,39 L44,43 C40,44 36,43 33,41 C31,40 30,39 30,38 Z"/>
+  <path class="sia" stroke-width="1.8" stroke-linejoin="round"
+        d="M56,34 C57,28 63,25 67,28 C69,30 68,34 65,35 L70,39 C66,40 62,39 59,37 C57,36 56,35 56,34 Z"/>
+  <!-- fruit hanging in the crown -->
+  <circle class="fb" cx="44" cy="46" r="2.6"/>
+  <circle class="fb" cx="57" cy="48" r="2.6"/>
+  <circle class="fb" cx="50" cy="38" r="2.6"/>
+  <!-- bead set by the roots -->
+  <circle class="bd" cx="64" cy="90" r="2.6"/>
+</svg>

@@ -3,6 +3,7 @@
 import * as THREE from 'three/webgpu';
 import { createAnimal, listSpecies } from '../src/index.js';
 import { STYLE_KEYS } from '../src/core/render/madhubani/params.js';
+import { loadMotifAtlasSet } from '../src/core/render/madhubani/atlas.js';
 
 const params = new URLSearchParams(location.search);
 const SPECIES = params.get('species') || 'cheetah';
@@ -13,7 +14,10 @@ const PALETTE = Number(params.get('palette') || 0);
 const MSTYLE = params.get('mstyle') || 'vyaghra';
 const VARIANT = params.get('variant') || '';
 const BRUSH = params.get('brush') === '1';
-const MTILES = params.get('mtiles') || 'bomb';
+// `chain` = body-space pattern space (arc length along the part x arc length around it, both in
+// metres) with zones from the baked anatomical designGroup. This is the correct placement model and
+// the default. `bomb` = the old per-seed Voronoi/tangent-plane path, kept only for comparison.
+const MTILES = params.get('mtiles') || 'chain';
 const MDBG = params.get('mdbg');
 
 // species.variants is declared inconsistently across the base — normalise to {id,name}
@@ -67,10 +71,24 @@ function panel(vlist) {
 }
 
 async function main() {
+  // Baked SVG motifs, stacked into ONE all-style texture array (see madhubani/atlas.js). Loaded
+  // before the animal because the coat binds the texture at material-construction time. A null
+  // result falls back to the old SDF tiles, so the viewer still runs with no bake on disk.
+  let madhubaniAtlas = null;
+  if (STYLE === 'madhubani') {
+    status('loading motifs…');
+    madhubaniAtlas = await loadMotifAtlasSet(
+      STYLE_KEYS.map((k) => ({ styleKey: k, url: `atlas/${k}.bin` })),
+    );
+    if (madhubaniAtlas) {
+      console.log(`[madhubani] motif atlas: ${madhubaniAtlas.layers} layers @ ${madhubaniAtlas.cellSize}px, styles=${madhubaniAtlas.styles.join(',')}`);
+    }
+  }
   status('building ' + SPECIES + ' seed ' + SEED + ' (' + QUALITY + ')…');
   const animal = await createAnimal(SPECIES, {
     seed: SEED, quality: QUALITY, worker: false, ground: () => 0, variant: VARIANT || undefined, brush: BRUSH,
     style: STYLE, palette: PALETTE, madhubaniStyle: MSTYLE, madhubaniSeed: SEED, madhubaniTiles: MTILES,
+    madhubaniAtlas,
   });
   window.__animal = animal;
   if (MDBG && animal.render.materials?.mad?.setDebug) animal.render.materials.mad.setDebug(Number(MDBG));

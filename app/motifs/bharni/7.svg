@@ -1,0 +1,20 @@
+<!-- bharni 7 - filled tree: a solid canopy tree with a filled trunk, for the wing. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- broad cloud canopy in fill A -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M50,8 C30,8 14,20 12,38 C4,42 4,54 12,58 C14,68 26,74 38,70 C44,76 56,76 62,70 C74,74 86,68 88,58 C96,54 96,42 88,38 C86,20 70,8 50,8 Z"/>
+  <!-- inner canopy heart in fill B -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M50,22 C38,22 28,30 27,41 C32,43 36,43 39,41 C40,47 45,51 50,51 C55,51 60,47 61,41 C64,43 68,43 73,41 C72,30 62,22 50,22 Z"/>
+  <!-- filled tapering trunk -->
+  <path class="sia" stroke-width="3" stroke-linejoin="round"
+        d="M44,70 C44,78 42,86 38,94 L62,94 C58,86 56,78 56,70 C52,73 48,73 44,70 Z"/>
+  <!-- branches rising into the canopy -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M50,70 C48,60 46,52 42,46"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M50,70 C52,60 54,52 58,46"/>
+  <!-- two fruit drops in fill B -->
+  <path class="fb" d="M34,52 C31,51 30,48 31,45 C33,43 36,44 37,47 C37,50 36,52 34,52 Z"/>
+  <path class="fb" d="M66,52 C63,51 62,48 63,45 C65,43 68,44 69,47 C69,50 68,52 66,52 Z"/>
+  <circle class="bd" cx="50" cy="36" r="3"/>
+</svg>

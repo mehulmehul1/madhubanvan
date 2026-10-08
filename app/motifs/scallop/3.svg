@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- scallop 3 - dense small scales: a 2x2 block per tile. Used where the body
+       needs a fine grain (legs, muzzle, haunches) instead of the hero scale. -->
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- upper row -->
+  <path class="sia" stroke-width="2.2" stroke-linejoin="round"
+        d="M2,4 C2,18 24,28 50,28 C76,28 98,18 98,4 C76,4 24,4 2,4 Z"/>
+  <!-- inner echo on the upper scale: fill mass balancing the lower beads -->
+  <path class="sia" stroke-width="1.7" stroke-linejoin="round"
+        d="M12,9 C12,18 29,24 50,24 C71,24 88,18 88,9 Z"/>
+  <!-- lower row, half-offset so the four scales read as one field -->
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round"
+        d="M-23,54 C-23,68 -1,78 25,78 C51,78 73,68 73,54 C51,54 -1,54 -23,54 Z"/>
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round"
+        d="M27,54 C27,68 49,78 75,78 C101,78 123,68 123,54 C101,54 49,54 27,54 Z"/>
+  <circle class="bd" cx="25" cy="66" r="2.4"/>
+  <circle class="bd" cx="75" cy="66" r="2.4"/>
+</svg>

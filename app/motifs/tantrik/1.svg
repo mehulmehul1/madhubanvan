@@ -1,0 +1,21 @@
+<!-- tantrik 1 - the flagship rosette: outer ring of 8 broad bezier petals alternating A and B, inner ring of 8 narrower petals offset half a step, centre bead. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="sia" stroke-width="2.2" stroke-linejoin="round" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round" transform="rotate(45 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sia" stroke-width="2.2" stroke-linejoin="round" transform="rotate(90 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round" transform="rotate(135 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sia" stroke-width="2.2" stroke-linejoin="round" transform="rotate(180 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round" transform="rotate(225 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sia" stroke-width="2.2" stroke-linejoin="round" transform="rotate(270 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sib" stroke-width="2.2" stroke-linejoin="round" transform="rotate(315 50 50)" d="M63,50 C71,39.5 81,40.5 92,50 C81,59.5 71,60.5 63,50 Z"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" transform="rotate(22.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(67.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" transform="rotate(112.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(157.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" transform="rotate(202.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(247.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" transform="rotate(292.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(337.5 50 50)" d="M56,50 C61,45.6 66.5,45.8 72,50 C66.5,54.2 61,54.4 56,50 Z"/>
+  <circle class="bd" cx="50" cy="50" r="3.4"/>
+</svg>

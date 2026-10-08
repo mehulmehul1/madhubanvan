@@ -1,0 +1,19 @@
+<!-- vyaghra 5 - stripe pair + bead: two parallel tapered stripes with a bead between them. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- left stripe in A, swelling mid-body, pinched at both bleeds -->
+  <path class="sia" stroke-width="3" stroke-linejoin="round"
+        d="M28,-8 C36,14 38,44 34,72 C32,86 30,96 29,108 L25,92 C21,74 20,48 22,26 C23,10 24,0 22,-8 Z"/>
+  <!-- right stripe in B, same lens leaning the other way -->
+  <path class="sib" stroke-width="3" stroke-linejoin="round"
+        d="M72,-8 C80,14 82,44 78,72 C76,86 74,96 73,108 L69,92 C65,74 64,48 66,26 C67,10 68,0 66,-8 Z"/>
+  <!-- echo line inside the left stripe -->
+  <path class="si" stroke-width="1.5" stroke-linejoin="round" d="M29,10 C33,32 33,60 28,90"/>
+  <!-- echo line inside the right stripe, in A to keep the ink quiet -->
+  <path class="sa" stroke-width="1.5" stroke-linejoin="round" d="M71,10 C75,32 75,60 70,90"/>
+  <!-- teardrop cap floating in the channel between the stripes -->
+  <path class="fa" d="M50,6 C55,12 56,18 53,23 C50,27 45,26 43,21 C41,16 44,10 50,6 Z"/>
+  <!-- beads riding the channel -->
+  <circle class="bd" cx="50" cy="50" r="3"/>
+  <circle class="bd" cx="50" cy="78" r="2"/>
+</svg>

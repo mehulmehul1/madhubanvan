@@ -1,0 +1,11 @@
+<!-- katchni 5 - basket weave: 3 wobbling vertical A ribbons crossed by 3 wobbling horizontal B ribbons, layered over-under, for the wing. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <rect class="fa" x="0" y="0" width="100" height="100"/>
+  <path class="sia" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M11,-10 C13,10 9,35 12,60 C13,80 12,95 12,110 L27,110 C27,90 25,65 27,40 C28,20 26,5 27,-10 Z"/>
+  <path class="sia" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M43,-10 C45,15 41,40 44,65 C45,85 44,95 44,110 L59,110 C59,85 57,60 59,35 C60,15 58,0 59,-10 Z"/>
+  <path class="sia" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M75,-10 C77,12 73,38 76,62 C77,82 76,96 76,110 L91,110 C91,88 89,62 91,38 C92,18 90,2 91,-10 Z"/>
+  <path class="sib" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M-10,13 C15,11 40,15 65,12 C85,10 98,11 110,13 L110,28 C90,30 65,26 40,29 C20,31 5,30 -10,28 Z"/>
+  <path class="sib" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M-10,45 C18,43 45,47 70,44 C88,42 100,43 110,45 L110,60 C92,62 68,58 45,61 C25,63 8,62 -10,60 Z"/>
+  <path class="sib" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M-10,77 C16,75 42,79 66,76 C86,74 100,75 110,77 L110,92 C90,94 66,90 42,93 C22,95 4,94 -10,92 Z"/>
+</svg>

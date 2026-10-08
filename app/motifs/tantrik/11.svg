@@ -1,0 +1,15 @@
+<!-- tantrik 11 - half-mandala fan: a quarter mandala for corners and joints. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="si" stroke-width="2.2" stroke-linejoin="round" d="M10,90 C9.5,62 10.5,34 10,8"/>
+  <path class="si" stroke-width="2.2" stroke-linejoin="round" d="M10,90 C38,90.5 66,89.5 92,90"/>
+  <path class="si" stroke-width="2" stroke-linejoin="round" d="M10,60 A30,30 0 0 1 40,90"/>
+  <path class="sa" stroke-width="2" stroke-linejoin="round" d="M10,38 A52,52 0 0 1 62,90"/>
+  <path class="si" stroke-width="2.2" stroke-linejoin="round" d="M10,16 A74,74 0 0 1 84,90"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(14 10 90)" d="M10,20 C14,32 14,44 10,56 C6,44 6,32 10,20 Z"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" transform="rotate(32 10 90)" d="M10,20 C14,32 14,44 10,56 C6,44 6,32 10,20 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(50 10 90)" d="M10,20 C14,32 14,44 10,56 C6,44 6,32 10,20 Z"/>
+  <path class="sib" stroke-width="2" stroke-linejoin="round" transform="rotate(68 10 90)" d="M10,20 C14,32 14,44 10,56 C6,44 6,32 10,20 Z"/>
+  <path class="sia" stroke-width="2" stroke-linejoin="round" transform="rotate(86 10 90)" d="M10,20 C14,32 14,44 10,56 C6,44 6,32 10,20 Z"/>
+  <circle class="bd" cx="10" cy="90" r="3"/>
+</svg>

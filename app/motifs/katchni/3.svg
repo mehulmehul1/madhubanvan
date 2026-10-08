@@ -1,0 +1,11 @@
+<!-- katchni 3 - wave: 5 travelling sine-like rulings drifting across the tile, two of them B-tone bands, with a pair of beads riding the crests of the middle line. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <path class="si" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,14 C5,8 20,7 32,12 C44,17 58,18 70,13 C82,8 96,8 110,13"/>
+  <path class="sib" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M-10,33 C4,27 18,26 30,31 C42,36 56,37 68,32 C80,27 95,27 110,32"/>
+  <path class="si" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" d="M-10,50 C4,43 18,42 30,48 C42,54 56,55 68,49 C80,43 94,42 110,48"/>
+  <circle class="bd" cx="19" cy="42.9" r="2.1"/>
+  <circle class="bd" cx="85" cy="42.9" r="2.3"/>
+  <path class="sib" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M-10,69 C6,63 20,62 32,67 C44,72 58,73 70,68 C82,63 96,62 110,67"/>
+  <path class="si" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" d="M-10,87 C8,81 22,80 34,85 C46,90 60,91 72,86 C84,81 98,80 110,85"/>
+</svg>

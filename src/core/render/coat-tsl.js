@@ -42,7 +42,7 @@ export function createCoatMaterials(dqTexture, opts = {}) {
   const style = opts.style === 'madhubani' ? 'madhubani' : 'natural';
   const mad = style === 'madhubani'
     ? createMadhubani({ palette: opts.palette, styleKey: opts.madhubaniStyle, seed: opts.madhubaniSeed,
-        tiles: opts.tiles, grid: opts.madGrid })
+        tiles: opts.tiles, grid: opts.madGrid, atlas: opts.madhubaniAtlas })
     : null;
   const aMad1 = attribute('aMad1', 'vec4');
   const aMad2 = attribute('aMad2', 'vec4');

@@ -1,0 +1,17 @@
+<!-- bharni 9 - filled kalash: a solid decorated pot with leaves at its mouth. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- round-bellied pot in fill A -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M30,52 C30,40 40,34 50,34 C60,34 70,40 70,52 C70,66 62,80 50,84 C38,80 30,66 30,52 Z"/>
+  <!-- neck band at the mouth in fill B -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M38,34 C38,28 42,24 50,24 C58,24 62,28 62,34 C58,36 42,36 38,34 Z"/>
+  <!-- three leaves fanning past the top edge -->
+  <path class="sia" stroke-width="2.4" stroke-linejoin="round"
+        d="M50,24 C46,14 44,6 44,-4 C50,0 54,8 55,16 C57,8 60,0 66,-4 C66,6 64,14 60,22 C57,24 53,24 50,24 Z"/>
+  <!-- belly contour arcs over the fill -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M32,56 C40,60 60,60 68,56"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M38,70 C44,73 56,73 62,70"/>
+  <circle class="bd" cx="50" cy="58" r="3.2"/>
+</svg>

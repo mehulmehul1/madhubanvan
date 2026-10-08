@@ -74,6 +74,7 @@ export function createAnimalObject(data, species = {}, opts = {}) {
     palette: opts.palette,
     madhubaniStyle: opts.madhubaniStyle,
     madhubaniSeed: opts.madhubaniSeed ?? data.seed,
+    madhubaniAtlas: opts.madhubaniAtlas,
     tiles: opts.madhubaniTiles ?? 'bomb',
     madGrid: madTex,
   });

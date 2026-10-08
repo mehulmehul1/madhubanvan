@@ -1,0 +1,22 @@
+<!-- bharni 5 - filled turtle: a solid dome-shelled turtle with a segmented shell, head and legs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- great shell dome in fill A -->
+  <path class="sia" stroke-width="3.4" stroke-linejoin="round"
+        d="M14,68 C14,44 30,28 50,28 C70,28 86,44 86,68 C70,74 30,74 14,68 Z"/>
+  <!-- inner shell plate in fill B -->
+  <path class="sib" stroke-width="2.6" stroke-linejoin="round"
+        d="M28,64 C28,48 38,38 50,38 C62,38 72,48 72,64 C60,68 40,68 28,64 Z"/>
+  <!-- shell segment seams over the fills -->
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M50,38 C50,48 50,56 50,66"/>
+  <path class="si" stroke-width="1.2" stroke-linejoin="round" d="M36,42 C34,50 34,58 35,66"/>
+  <!-- blunt head nosing out left -->
+  <path class="sia" stroke-width="2.6" stroke-linejoin="round"
+        d="M14,66 C6,64 2,58 4,52 C6,46 12,44 16,48 C20,52 20,60 14,66 Z"/>
+  <!-- two stub legs paddling below -->
+  <path class="sia" stroke-width="2.4" stroke-linejoin="round"
+        d="M60,72 C58,78 60,84 66,86 C70,84 70,78 68,72 Z"/>
+  <path class="sia" stroke-width="2.4" stroke-linejoin="round"
+        d="M76,70 C76,77 79,82 84,82 C87,79 85,73 82,69 Z"/>
+  <circle class="bd" cx="9" cy="53" r="2.4"/>
+</svg>

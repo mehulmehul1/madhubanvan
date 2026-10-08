@@ -1,0 +1,19 @@
+<!-- vyaghra 8 - stripe + chevron: a tapered stripe with a row of chevrons beneath it. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <!-- the main stripe, swelling amidships, bleeding off both edges -->
+  <path class="sia" stroke-width="3" stroke-linejoin="round"
+        d="M-8,30 C30,20 62,18 108,10 C70,32 30,40 -8,40 Z"/>
+  <!-- echo line inside the stripe -->
+  <path class="si" stroke-width="1.5" stroke-linejoin="round" d="M6,29 C36,24 66,22 94,17"/>
+  <!-- broad chevron in B opening toward the stripe -->
+  <path class="sib" stroke-width="2.4" stroke-linejoin="round"
+        d="M18,60 C30,66 40,74 50,88 C60,74 70,66 82,60 L76,52 C66,58 58,64 50,76 C42,64 34,58 24,52 Z"/>
+  <!-- smaller chevron in A nested inside the first -->
+  <path class="sia" stroke-width="2" stroke-linejoin="round"
+        d="M32,62 C39,66 44,70 50,78 C56,70 61,66 68,62 L63,56 C57,60 53,63 50,68 C47,63 43,60 37,56 Z"/>
+  <!-- bead resting between stripe and chevron row -->
+  <circle class="bd" cx="50" cy="44" r="2.4"/>
+  <!-- short ground smile echoing the chevron's curve -->
+  <path class="sa" stroke-width="1.6" stroke-linejoin="round" d="M38,94 C44,97 56,97 62,94"/>
+</svg>

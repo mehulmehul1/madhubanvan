@@ -31,6 +31,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "bake:motifs": "node tools/bakeatlas.mjs",
+    "bake:motifs:verify": "node tools/bakeatlas.mjs --verify",
     "build:showcase": "node showcase/build.mjs",
     "build:pages": "node showcase/build.mjs --pages",
     "test": "node tools/test.mjs"

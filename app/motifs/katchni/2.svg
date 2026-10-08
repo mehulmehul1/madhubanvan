@@ -1,0 +1,24 @@
+<!-- katchni 2 - stipple rings: three hand-placed dot-rings of varying size and spacing round a centre bead, outer ring gapped, one loose bead in the corner. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <circle class="bd" cx="50" cy="50" r="3"/>
+  <!-- inner ring: 4 dots -->
+  <circle class="fb" cx="59.2" cy="52.5" r="2.5"/>
+  <circle class="fb" cx="47.5" cy="59.2" r="2.2"/>
+  <circle class="fb" cx="40.8" cy="47.5" r="2.6"/>
+  <circle class="fb" cx="52.5" cy="40.8" r="2.3"/>
+  <!-- second ring: 5 dots -->
+  <circle class="fb" cx="68.8" cy="50.6" r="2.0"/>
+  <circle class="fb" cx="55.2" cy="67.9" r="2.2"/>
+  <circle class="fb" cx="35.4" cy="60.4" r="1.9"/>
+  <circle class="fb" cx="34.6" cy="39.6" r="2.1"/>
+  <circle class="fb" cx="56.1" cy="32" r="1.8"/>
+  <!-- outer ring: 5 dots, gapped top and bottom -->
+  <circle class="fb" cx="74.6" cy="63.5" r="1.7"/>
+  <circle class="fb" cx="44.7" cy="77.9" r="1.9"/>
+  <circle class="fb" cx="22.8" cy="55.3" r="1.6"/>
+  <circle class="fb" cx="35.5" cy="26.2" r="1.8"/>
+  <circle class="fb" cx="68.4" cy="29" r="1.6"/>
+  <!-- loose corner bead -->
+  <circle class="bd" cx="88" cy="14" r="2.6"/>
+</svg>

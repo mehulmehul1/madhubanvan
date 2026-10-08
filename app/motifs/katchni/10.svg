@@ -1,0 +1,13 @@
+<!-- katchni 10 - net lattice: wobbling diagonals with a bead at each node, for the fin. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect class="g" x="0" y="0" width="100" height="100"/>
+  <rect class="fb" x="0" y="0" width="100" height="100"/>
+  <path class="si" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,20 C25,35 60,55 95,80 C102,85 106,88 110,90"/>
+  <path class="sa" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,55 C20,68 55,82 90,98 C98,101 104,103 110,105"/>
+  <path class="si" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,-5 C20,10 55,30 90,50 C100,56 105,59 110,62"/>
+  <path class="sa" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,80 C20,65 55,45 90,25 C100,19 105,16 110,13"/>
+  <path class="si" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,105 C25,88 60,68 95,48 C103,43 107,40 110,38"/>
+  <path class="sa" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M-10,45 C20,32 50,18 80,5 C90,0 100,-4 110,-8"/>
+  <circle class="bd" cx="42" cy="55" r="3"/>
+  <circle class="bd" cx="70" cy="60" r="3"/>
+</svg>
