@@ -177,6 +177,14 @@ export class JoltWorld {
    * Create static 15° inclined ramp
    */
   createRamp(length = 10, width = 4, thickness = 0.5, angleDeg = 15, position = [0, 0, 0]) {
+    if (Array.isArray(length)) {
+      const arr = length;
+      position = thickness || [0, 0, 0];
+      angleDeg = width || 15;
+      length = arr[0];
+      width = arr[1];
+      thickness = arr[2] || 0.5;
+    }
     const Jolt = this.Jolt;
     const hx = this.v3(0, width * 0.5, thickness * 0.5, length * 0.5);
     const shapeSettings = new Jolt.BoxShapeSettings(hx);
@@ -332,7 +340,7 @@ export class JoltWorld {
     const f = this.v3(0, force[0], force[1], force[2]);
     if (point) {
       const pt = this.rv3(0, point[0], point[1], point[2]);
-      this.bodyInterface.AddForce(bodyID, f, pt);
+      this.bodyInterface.AddForce(bodyID, f, pt, this.Jolt.EActivation_Activate);
     } else {
       this.bodyInterface.AddForce(bodyID, f);
     }
@@ -342,7 +350,7 @@ export class JoltWorld {
     const imp = this.v3(0, impulse[0], impulse[1], impulse[2]);
     if (point) {
       const pt = this.rv3(0, point[0], point[1], point[2]);
-      this.bodyInterface.AddImpulse(bodyID, imp, pt);
+      this.bodyInterface.AddImpulse(bodyID, imp, pt, this.Jolt.EActivation_Activate);
     } else {
       this.bodyInterface.AddImpulse(bodyID, imp);
     }

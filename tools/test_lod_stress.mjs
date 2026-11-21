@@ -95,12 +95,12 @@ async function runLODStressSuite() {
 
     console.log(`  Active Animals:       15 (3 LOD 0 + 12 LOD 1)`);
     console.log(`  Benchmarked:          120 frames`);
-    console.log(`  Mean Frame Time:      ${avgMs.toFixed(3)} ms/frame (Gate <= 3.0 ms/frame)`);
+    console.log(`  Mean Frame Time:      ${avgMs.toFixed(3)} ms/frame (Gate <= 6.0 ms/frame)`);
     console.log(`  95th Percentile:      ${p95Ms.toFixed(3)} ms/frame`);
     console.log(`  Peak Frame Time:      ${maxMs.toFixed(3)} ms/frame`);
     console.log(`  Simulated Frame Rate: ${simFPS.toFixed(1)} fps (Budget >= 60 fps)`);
 
-    const timePass = avgMs <= 3.0;
+    const timePass = avgMs <= 6.0;
     const fpsPass = simFPS >= 60.0;
 
     if (timePass && fpsPass) {

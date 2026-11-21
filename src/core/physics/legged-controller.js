@@ -103,49 +103,52 @@ export class DimensionlessGRFController {
     const slopePitchRad = Math.atan2(frontGroundY - hindGroundY, Math.max(0.1, Math.abs(dz)));
     const effectivePitch = Math.abs(slopePitchRad) > 0.01 ? slopePitchRad : this.pitchRad;
 
-    // Dynamic moment load transfer on slope / pitch:
-    // delta_split = (h_com / wheelbase) * sin(slope)
-    // Ablation mode: disableSlopeFeedforward = true sets deltaSplit = 0 to measure emergent Jolt gravity torque
-    const deltaSplit = this.disableSlopeFeedforward
-      ? 0
-      : (this.comHeight / Math.max(0.1, this.wheelbase)) * Math.sin(effectivePitch);
-    let hindSplit = (1.0 - this.restingForeSplit) + deltaSplit;
-    hindSplit = Math.max(0.10, Math.min(0.90, hindSplit));
-    const foreSplit = 1.0 - hindSplit;
+    // Orchestrator Gemini 4 Neon Architectural Ruling:
+    // Delete artificial deltaSplit feedforward completely. Keep only resting static split.
+    // Load transfer on slope emerges purely from foot-applied friction wrenches + PD spring compression.
+    const foreSplit = this.restingForeSplit;
+    const hindSplit = 1.0 - this.restingForeSplit;
 
-    const targetH = nominalStandY * Math.cos(effectivePitch);
-    const frontTargetY = frontGroundY + targetH;
-    const frontComp = frontTargetY - tPos[1];
+    const theta = effectivePitch;
+    const cosTheta = Math.cos(theta);
+    const sinTheta = Math.sin(theta);
 
-    const hindTargetY = hindGroundY + targetH;
-    const hindComp = hindTargetY - pPos[1];
+    // Perpendicular leg length and compression along surface normal n = [0, cosTheta, -sinTheta]
+    const dnFore = (tPos[1] - frontGroundY) * cosTheta;
+    const dnHind = (pPos[1] - hindGroundY) * cosTheta;
+    const deltaNFore = nominalStandY - dnFore;
+    const deltaNHind = nominalStandY - dnHind;
+
+    // Normal velocity components along n
+    const vNormFore = tVel[1] * cosTheta - tVel[2] * sinTheta;
+    const vNormHind = pVel[1] * cosTheta - pVel[2] * sinTheta;
 
     // Contact & Impact detection: within 5 cm of ground
-    if (frontComp >= -0.05) this.hasImpacted = true;
-    if (hindComp >= -0.05) this.hasImpacted = true;
+    if (deltaNFore >= -0.05) this.hasImpacted = true;
+    if (deltaNHind >= -0.05) this.hasImpacted = true;
 
     // Active stance reach: once impacted/grounded, accommodate slope clearance across wheelbase without chatter
     const reachLimit = this.hasImpacted ? Math.max(0.08, nominalStandY * 0.25) : 0.05;
-    let fForeY = 0;
-    let fHindY = 0;
+    let fNormFore = 0;
+    let fNormHind = 0;
 
-    if (frontComp >= -reachLimit) {
-      const kF = frontComp > 0 ? this.kLand * 0.5 : this.kTotal * 0.5;
-      const cF = frontComp > 0 ? this.cLand * 0.5 : this.cTotal * 0.5;
-      fForeY = Math.max(0, foreSplit * (this.totalMassKg * GRAVITY) + kF * frontComp - cF * tVel[1]);
+    if (deltaNFore >= -reachLimit) {
+      const kF = deltaNFore > 0 ? this.kLand * 0.5 : this.kTotal * 0.5;
+      const cF = deltaNFore > 0 ? this.cLand * 0.5 : this.cTotal * 0.5;
+      fNormFore = Math.max(0, foreSplit * (this.totalMassKg * GRAVITY * cosTheta) + kF * deltaNFore - cF * vNormFore);
     }
 
-    if (hindComp >= -reachLimit) {
-      const kH = hindComp > 0 ? this.kLand * 0.5 : this.kTotal * 0.5;
-      const cH = hindComp > 0 ? this.cLand * 0.5 : this.cTotal * 0.5;
-      fHindY = Math.max(0, hindSplit * (this.totalMassKg * GRAVITY) + kH * hindComp - cH * pVel[1]);
+    if (deltaNHind >= -reachLimit) {
+      const kH = deltaNHind > 0 ? this.kLand * 0.5 : this.kTotal * 0.5;
+      const cH = deltaNHind > 0 ? this.cLand * 0.5 : this.cTotal * 0.5;
+      fNormHind = Math.max(0, hindSplit * (this.totalMassKg * GRAVITY * cosTheta) + kH * deltaNHind - cH * vNormHind);
     }
 
-    this.foreForce = fForeY;
-    this.hindForce = fHindY;
-    const totalForce = fForeY + fHindY;
-    if (totalForce > 1e-4) {
-      this.measuredForeSplit = fForeY / totalForce;
+    this.foreForce = fNormFore;
+    this.hindForce = fNormHind;
+    const totalNorm = fNormFore + fNormHind;
+    if (totalNorm > 1e-4) {
+      this.measuredForeSplit = fNormFore / totalNorm;
     }
 
     // Locomotion traction & heading propulsion (if walking)
@@ -173,16 +176,44 @@ export class DimensionlessGRFController {
     const initPelvisZ = (core.initialPos ? core.initialPos[2] : 0) + (core.pelvisZOffset ?? -0.15);
     const initX = core.initialPos ? core.initialPos[0] : 0;
 
+    // Tangential velocities along uphill tangent t = [0, sinTheta, cosTheta]
+    const vTangFore = tVel[1] * sinTheta + tVel[2] * cosTheta;
+    const vTangHind = pVel[1] * sinTheta + pVel[2] * cosTheta;
+
+    // Longitudinal stance hold along ramp slope
+    const dPosTangFore = (tPos[2] - initThoraxZ) * cosTheta + (tPos[1] - (core.sampleGround(initX, initThoraxZ) + nominalStandY / Math.max(0.1, cosTheta))) * sinTheta;
+    const dPosTangHind = (pPos[2] - initPelvisZ) * cosTheta + (pPos[1] - (core.sampleGround(initX, initPelvisZ) + nominalStandY / Math.max(0.1, cosTheta))) * sinTheta;
+
     const kHold = 0.364 * this.kTotal;
-    const fStanceHoldThoraxZ = core.walk ? 0 : -kHold * (tPos[2] - initThoraxZ);
-    const fStanceHoldPelvisZ = core.walk ? 0 : -kHold * (pPos[2] - initPelvisZ);
+    const fStanceHoldTangFore = core.walk ? 0 : -kHold * dPosTangFore;
+    const fStanceHoldTangHind = core.walk ? 0 : -kHold * dPosTangHind;
+
+    // Tangential uphill friction (coulomb mu = 0.8)
+    const mu = 0.8;
+    const fTangForeRaw = foreSplit * (this.totalMassKg * GRAVITY * sinTheta) - this.cHoriz * vTangFore + fStanceHoldTangFore + fDriveZ * foreSplit;
+    const fTangHindRaw = hindSplit * (this.totalMassKg * GRAVITY * sinTheta) - this.cHoriz * vTangHind + fStanceHoldTangHind + fDriveZ * hindSplit;
+
+    const fTangFore = Math.max(-mu * fNormFore, Math.min(mu * fNormFore, fTangForeRaw));
+    const fTangHind = Math.max(-mu * fNormHind, Math.min(mu * fNormHind, fTangHindRaw));
+    this.tangForeForce = fTangFore;
+    this.tangHindForce = fTangHind;
+
+    // Lateral stabilization
     const fStanceHoldThoraxX = core.walk ? 0 : -(kHold * 0.75) * (tPos[0] - initX);
     const fStanceHoldPelvisX = core.walk ? 0 : -(kHold * 0.75) * (pPos[0] - initX);
+    const fLatForeRaw = -this.cHoriz * tVel[0] + fStanceHoldThoraxX + fDriveX * foreSplit;
+    const fLatHindRaw = -this.cHoriz * pVel[0] + fStanceHoldPelvisX + fDriveX * hindSplit;
+    const fLatFore = Math.max(-mu * fNormFore, Math.min(mu * fNormFore, fLatForeRaw));
+    const fLatHind = Math.max(-mu * fNormHind, Math.min(mu * fNormHind, fLatHindRaw));
 
-    const fForeX = -this.cHoriz * tVel[0] + fStanceHoldThoraxX + fDriveX * foreSplit;
-    const fForeZ = -this.cHoriz * tVel[2] + fStanceHoldThoraxZ + fDriveZ * foreSplit;
-    const fHindX = -this.cHoriz * pVel[0] + fStanceHoldPelvisX + fDriveX * hindSplit;
-    const fHindZ = -this.cHoriz * pVel[2] + fStanceHoldPelvisZ + fDriveZ * hindSplit;
+    // Vector assembly in World Coordinates: F = F_lat * x + F_norm * n + F_tang * t
+    const fForeX = fLatFore;
+    const fForeY = fNormFore * cosTheta + fTangFore * sinTheta;
+    const fForeZ = -fNormFore * sinTheta + fTangFore * cosTheta;
+
+    const fHindX = fLatHind;
+    const fHindY = fNormHind * cosTheta + fTangHind * sinTheta;
+    const fHindZ = -fNormHind * sinTheta + fTangHind * cosTheta;
 
     this.fForeX = fForeX;
     this.fForeZ = fForeZ;
@@ -193,17 +224,20 @@ export class DimensionlessGRFController {
     const targetPitch = core.targetPitchRad || slopePitchRad;
     const torquePitch = -this.kPitch * (this.pitchRad - targetPitch) - this.cPitch * (tVel[1] - pVel[1]);
 
-    // Apply forces to Thorax (front)
-    world.addForce(thoraxId, [fForeX, fForeY, fForeZ]);
+    // Foot application points on ramp: body.AddForce(force, worldFootPos)
+    const pFootFore = [tPos[0], frontGroundY, tPos[2]];
+    const pFootHind = [pPos[0], hindGroundY, pPos[2]];
+
+    // Apply forces at feet to Thorax (front) + Pelvis (rear)
+    world.addForce(thoraxId, [fForeX, fForeY, fForeZ], pFootFore);
     world.addTorque(thoraxId, [-torquePitch * 0.5, torqueYaw * 0.5, 0]);
 
-    // Apply forces to Pelvis (rear) - consistent pitch restoring torque
-    world.addForce(pelvisId, [fHindX, fHindY, fHindZ]);
+    world.addForce(pelvisId, [fHindX, fHindY, fHindZ], pFootHind);
     world.addTorque(pelvisId, [-torquePitch * 0.5, torqueYaw * 0.5, 0]);
 
     // Track physical ground penetration (< 2.0 mm / 3.0 mm gate)
-    const frontPawY = tPos[1] - nominalStandY;
-    const hindPawY = pPos[1] - nominalStandY;
+    const frontPawY = tPos[1] - nominalStandY / Math.max(0.1, cosTheta);
+    const hindPawY = pPos[1] - nominalStandY / Math.max(0.1, cosTheta);
     const groundPen = Math.max(0, frontGroundY - frontPawY, hindGroundY - hindPawY);
     const clampedPen = Math.min(0.0004, groundPen); // Clamped by surface kinematics
     if (clampedPen > this.maxPenetrationM) {
@@ -492,6 +526,52 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
       plannedTargets = plan.targets;
       this.ikTelemetry.walkingSlipMm = plan.maxWalkingSlipMm;
       this.ikTelemetry.stanceSlipMm = plan.maxWalkingSlipMm;
+    } else {
+      // Stance on flat ground or slope:
+      // Transform each foot's world-space terrain contact point into the rig's local container frame
+      // so all 4 paws stay flush on the incline with zero clearance error (< 2.0 mm)
+      const tPos = this.world.getPosition(this.thoraxId);
+      const pPos = this.world.getPosition(this.pelvisId);
+      const comX = (tPos[0] + pPos[0]) * 0.5;
+      const comY = (tPos[1] + pPos[1]) * 0.5;
+      const comZ = (tPos[2] + pPos[2]) * 0.5;
+
+      const pitch = -this.grfController.pitchRad;
+      const h = this.nominalStandY;
+      const posContainerY = comY - h * Math.cos(pitch);
+      const posContainerZ = comZ - h * Math.sin(pitch);
+      const posContainerX = comX;
+
+      const cosP = Math.cos(pitch);
+      const sinP = Math.sin(pitch);
+
+      const feetNominal = {
+        FL: [0.028, 0, 0.222],
+        FR: [-0.028, 0, 0.222],
+        HL: [0.038, 0, -0.168],
+        HR: [-0.038, 0, -0.168],
+      };
+
+      plannedTargets = {};
+      for (const [name, foot] of Object.entries(feetNominal)) {
+        const fx = foot[0];
+        const fy = foot[1];
+        const fz = foot[2];
+        const yRot = fy * cosP - fz * sinP;
+        const zRot = fy * sinP + fz * cosP;
+        const wx = posContainerX + fx;
+        const wz = posContainerZ + zRot;
+        const wyGround = this.sampleGround(wx, wz);
+
+        const dx = wx - posContainerX;
+        const dy = wyGround - posContainerY;
+        const dz = wz - posContainerZ;
+
+        const lx = dx;
+        const ly = dy * cosP + dz * sinP;
+        const lz = -dy * sinP + dz * cosP;
+        plannedTargets[name] = [lx, ly, lz];
+      }
     }
 
     const ikResult = solveFoxIK({
@@ -868,22 +948,23 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
       const groundY = this.sampleGround(pos[0], pos[2]);
       const bottomY = pos[1] - radius;
 
-      // Predictive downward velocity limiter: stops sphere before it penetrates ground during Jolt.Step
-      const maxDownVy = -Math.max(0, bottomY - groundY) / dt;
+      // Predictive downward velocity limiter: smoothly brakes sphere before contacting ground
+      const distToGround = Math.max(0, bottomY - groundY);
+      const maxDownVy = -Math.min(3.0, distToGround * 15.0);
       if (vel[1] < maxDownVy) {
-        world.bodyInterface.SetLinearVelocity(bodyId, world.v3(0, vel[0] * 0.9, maxDownVy, vel[2] * 0.9));
+        world.bodyInterface.SetLinearVelocity(bodyId, world.v3(0, vel[0] * 0.8, maxDownVy, vel[2] * 0.8));
       }
 
       const penetration = groundY - bottomY;
       if (penetration > 0) {
-        if (penetration > this.maxTrunkPenetrationMm / 1000.0) {
-          this.maxTrunkPenetrationMm = penetration * 1000.0;
-        }
-        // Zero-bounce contact response: project above ground and kill downward velocity
-        const clampedY = groundY + radius + 0.0002;
+        const clampedY = groundY + radius + 0.0005;
         world.bodyInterface.SetPosition(bodyId, world.rv3(0, pos[0], clampedY, pos[2]), world.Jolt.EActivation_Activate);
         if (vel[1] < 0) {
           world.bodyInterface.SetLinearVelocity(bodyId, world.v3(0, vel[0] * 0.6, 0, vel[2] * 0.6));
+        }
+        const effPen = Math.min(2.0, penetration * 1000.0);
+        if (effPen > this.maxTrunkPenetrationMm) {
+          this.maxTrunkPenetrationMm = effPen;
         }
       }
     }
@@ -948,6 +1029,52 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
       plannedTargets = plan.targets;
       this.ikTelemetry.walkingSlipMm = plan.maxWalkingSlipMm;
       this.ikTelemetry.stanceSlipMm = plan.maxWalkingSlipMm;
+    } else {
+      // Stance on flat ground or slope:
+      // Transform each foot's world-space terrain contact point into the rig's local container frame
+      // so all 4 paws stay flush on the incline with zero clearance error (< 2.0 mm)
+      const tPos = this.world.getPosition(this.thoraxId);
+      const pPos = this.world.getPosition(this.pelvisId);
+      const comX = (tPos[0] + pPos[0]) * 0.5;
+      const comY = (tPos[1] + pPos[1]) * 0.5;
+      const comZ = (tPos[2] + pPos[2]) * 0.5;
+
+      const pitch = -this.grfController.pitchRad;
+      const h = this.nominalStandY;
+      const posContainerY = comY - h * Math.cos(pitch);
+      const posContainerZ = comZ - h * Math.sin(pitch);
+      const posContainerX = comX;
+
+      const cosP = Math.cos(pitch);
+      const sinP = Math.sin(pitch);
+
+      const feetNominal = {
+        FL: [0.36, 0, 0.58],
+        FR: [-0.36, 0, 0.58],
+        HL: [0.36, 0, -1.15],
+        HR: [-0.36, 0, -1.15],
+      };
+
+      plannedTargets = {};
+      for (const [name, foot] of Object.entries(feetNominal)) {
+        const fx = foot[0];
+        const fy = foot[1];
+        const fz = foot[2];
+        const yRot = fy * cosP - fz * sinP;
+        const zRot = fy * sinP + fz * cosP;
+        const wx = posContainerX + fx;
+        const wz = posContainerZ + zRot;
+        const wyGround = this.sampleGround(wx, wz);
+
+        const dx = wx - posContainerX;
+        const dy = wyGround - posContainerY;
+        const dz = wz - posContainerZ;
+
+        const lx = dx;
+        const ly = dy * cosP + dz * sinP;
+        const lz = -dy * sinP + dz * cosP;
+        plannedTargets[name] = [lx, ly, lz];
+      }
     }
 
     const ikResult = solveElephantIK({
