@@ -40,6 +40,7 @@ export class JoltWorld {
     this.activeBodies = new Set();
     this.activeShapes = new Set();
     this.activeConstraints = new Set();
+    this.activeConstraintSettings = new Set();
     this.trackedDisposables = new Set();
     this.wrenchGenerators = new Set();
 
@@ -181,8 +182,8 @@ export class JoltWorld {
 
     const pos = this.rv3(0, position[0], position[1], position[2]);
     const rad = (angleDeg * Math.PI) / 180;
-    // Rotation around X axis
-    const rot = this.quat(0, Math.sin(rad * 0.5), 0, 0, Math.cos(rad * 0.5));
+    // Rotation around X axis (negative angle lifts +Z forward side uphill)
+    const rot = this.quat(0, Math.sin(-rad * 0.5), 0, 0, Math.cos(-rad * 0.5));
 
     const creationSettings = new Jolt.BodyCreationSettings(
       shape, pos, rot,
@@ -272,6 +273,10 @@ export class JoltWorld {
     return out;
   }
 
+  getBodyPosition(bodyID, out = [0, 0, 0]) {
+    return this.getPosition(bodyID, out);
+  }
+
   getRotation(bodyID, out = [0, 0, 0, 1]) {
     const q = this.bodyInterface.GetRotation(bodyID);
     out[0] = q.GetX();
@@ -279,6 +284,10 @@ export class JoltWorld {
     out[2] = q.GetZ();
     out[3] = q.GetW();
     return out;
+  }
+
+  getBodyRotation(bodyID, out = [0, 0, 0, 1]) {
+    return this.getRotation(bodyID, out);
   }
 
   getLinearVelocity(bodyID, out = [0, 0, 0]) {
@@ -289,12 +298,20 @@ export class JoltWorld {
     return out;
   }
 
+  getBodyLinearVelocity(bodyID, out = [0, 0, 0]) {
+    return this.getLinearVelocity(bodyID, out);
+  }
+
   getAngularVelocity(bodyID, out = [0, 0, 0]) {
     const w = this.bodyInterface.GetAngularVelocity(bodyID);
     out[0] = w.GetX();
     out[1] = w.GetY();
     out[2] = w.GetZ();
     return out;
+  }
+
+  getBodyAngularVelocity(bodyID, out = [0, 0, 0]) {
+    return this.getAngularVelocity(bodyID, out);
   }
 
   setPositionAndRotation(bodyID, pos, rot) {
@@ -321,6 +338,44 @@ export class JoltWorld {
     } else {
       this.bodyInterface.AddImpulse(bodyID, imp);
     }
+  }
+
+  addTorque(bodyID, torque) {
+    const tq = this.v3(0, torque[0], torque[1], torque[2]);
+    this.bodyInterface.AddTorque(bodyID, tq);
+  }
+
+  // --- Constraints (SwingTwist, Point, Distance) ---
+
+  createSwingTwistConstraint(bodyID1, bodyID2, options = {}) {
+    const Jolt = this.Jolt;
+    const s = new Jolt.SwingTwistConstraintSettings();
+    const p1 = options.pos1 || [0, 0, 0];
+    const p2 = options.pos2 || [0, 0, 0];
+    const twist1 = options.twist1 || [0, 0, 1];
+    const twist2 = options.twist2 || [0, 0, 1];
+    const plane1 = options.plane1 || [0, 1, 0];
+    const plane2 = options.plane2 || [0, 1, 0];
+
+    s.mPosition1 = this.v3(1, p1[0], p1[1], p1[2]);
+    s.mPosition2 = this.v3(2, p2[0], p2[1], p2[2]);
+    s.mTwistAxis1 = this.v3(3, twist1[0], twist1[1], twist1[2]);
+    s.mTwistAxis2 = this.v3(4, twist2[0], twist2[1], twist2[2]);
+    s.mPlaneAxis1 = this.v3(5, plane1[0], plane1[1], plane1[2]);
+    s.mPlaneAxis2 = this.v3(6, plane2[0], plane2[1], plane2[2]);
+
+    s.mNormalHalfConeAngle = options.normalHalfConeAngle ?? 0.35;
+    s.mPlaneHalfConeAngle = options.planeHalfConeAngle ?? 0.35;
+    s.mTwistMinAngle = options.twistMinAngle ?? -0.25;
+    s.mTwistMaxAngle = options.twistMaxAngle ?? 0.25;
+
+    const body1 = this.physicsSystem.GetBodyLockInterface().TryGetBody(bodyID1);
+    const body2 = this.physicsSystem.GetBodyLockInterface().TryGetBody(bodyID2);
+    const constraint = s.Create(body1, body2);
+    this.physicsSystem.AddConstraint(constraint);
+    this.activeConstraints.add(constraint);
+    this.activeConstraintSettings.add(s);
+    return constraint;
   }
 
   // --- Raycast API (Zero Allocations) ---
@@ -431,6 +486,17 @@ export class JoltWorld {
   dispose() {
     if (this.isDisposed) return;
     this.isDisposed = true;
+
+    // 0. Remove active constraints & destroy settings
+    for (const c of this.activeConstraints) {
+      this.physicsSystem.RemoveConstraint(c);
+    }
+    this.activeConstraints.clear();
+
+    for (const s of this.activeConstraintSettings) {
+      this.Jolt.destroy(s);
+    }
+    this.activeConstraintSettings.clear();
 
     // 1. Destroy all active bodies
     for (const bodyID of this.activeBodies) {
