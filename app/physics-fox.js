@@ -36,6 +36,7 @@ async function initScene() {
   renderer.setSize(width, height);
   renderer.setPixelRatio(window.devicePixelRatio);
   container.appendChild(renderer.domElement);
+  await renderer.init();
 
   // Lighting
   const ambient = new THREE.AmbientLight(0xfff5e6, 1.2);
@@ -157,7 +158,7 @@ function setupMode(mode) {
     }
 
     controller = new FoxSplitAuthorityController(joltWorld, {
-      totalMassKg: 8.5,
+      totalMassKg: 10.58,
       restingForeSplit: 0.566,
       nominalStandY: 0.38,
       targetPitchRad,
