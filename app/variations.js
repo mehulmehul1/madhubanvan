@@ -22,6 +22,22 @@ export const VARIATION_PRESETS = [
   { id: 12, name: 'Warhorse (Monumental)', desc: 'Exaggerated heroic mass (+22% size, +80% crest, +35% girth)', overrides: { size: 1.22, crest: 1.80, warps: horseWarps({ girth: 1.35, len: 1.10 }) } },
 ];
 
+export const PATTERN_PRESETS = [
+  { id: 1, style: 'vyaghra', palette: 0, palName: 'haldi-geru', name: 'Vyaghra · Tiger Gold', desc: 'Flowing tiger stripes in turmeric & terracotta' },
+  { id: 2, style: 'scallop', palette: 3, palName: 'neel', name: 'Scallop · Indigo Scales', desc: 'Overlapping aquatic fish scales in lapis indigo' },
+  { id: 3, style: 'kohbar', palette: 1, palName: 'kohbar', name: 'Kohbar · Nuptial Lotus', desc: 'Sacred bridal chamber lotus flora & fertility motifs' },
+  { id: 4, style: 'katchni', palette: 2, palName: 'chuna', name: 'Katchni · Fine Line Work', desc: 'Delicate high-density parallel line hatching' },
+  { id: 5, style: 'godna', palette: 7, palName: 'godna', name: 'Godna · Tattoo Dots', desc: 'Ancestral concentric circle tattoos & puncture marks' },
+  { id: 6, style: 'tantrik', palette: 6, palName: 'sindoor', name: 'Tantrik · Cinnabar Yantra', desc: 'Occult sacred mandalas in vermilion sindoor' },
+  { id: 7, style: 'bharni', palette: 4, palName: 'marigold', name: 'Bharni · Marigold Fill', desc: 'Bold, saturated flat color fills in warm ochre' },
+  { id: 8, style: 'katchni', palette: 3, palName: 'neel', name: 'Katchni · Midnight Indigo', desc: 'Ultra-fine line work in midnight blue & gold' },
+  { id: 9, style: 'vyaghra', palette: 6, palName: 'sindoor', name: 'Vyaghra · Cinnabar Tiger', desc: 'High-contrast vermilion and lampblack tiger bands' },
+  { id: 10, style: 'scallop', palette: 5, palName: 'polo', name: 'Scallop · Forest Sage', desc: 'Overlapping scales in earth green & raw sienna' },
+  { id: 11, style: 'kohbar', palette: 2, palName: 'chuna', name: 'Kohbar · Chalk Ivory', desc: 'Delicate flora on lime white parchment' },
+  { id: 12, style: 'bharni', palette: 0, palName: 'haldi-geru', name: 'Bharni · Golden Terracotta', desc: 'Vivid, richly pigmented ancestral ceremonial fills' },
+];
+
+let activeMode = 'patterns';
 let activeSpecies = 'horse';
 let activeStyle = 'vyaghra';
 
@@ -30,8 +46,18 @@ async function init() {
   if (!status) return; // Only execute when DOM is variations.html
 
   const params = new URLSearchParams(location.search);
+  if (params.get('mode')) activeMode = params.get('mode');
   if (params.get('species')) activeSpecies = params.get('species');
   if (params.get('style')) activeStyle = params.get('style');
+
+  const modeSelect = document.getElementById('modeSelect');
+  if (modeSelect) {
+    modeSelect.value = activeMode;
+    modeSelect.addEventListener('change', (e) => {
+      activeMode = e.target.value;
+      buildGrid();
+    });
+  }
 
   const spSelect = document.getElementById('speciesSelect');
   if (spSelect) {
@@ -54,8 +80,9 @@ async function init() {
   const copyBtn = document.getElementById('copyCuratedBtn');
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
-      const saved = JSON.parse(localStorage.getItem(`curated_${activeSpecies}`) || '[]');
-      const kept = VARIATION_PRESETS.filter((p) => saved.includes(p.id));
+      const saved = JSON.parse(localStorage.getItem(`curated_${activeSpecies}_${activeMode}`) || '[]');
+      const list = activeMode === 'patterns' ? PATTERN_PRESETS : VARIATION_PRESETS;
+      const kept = list.filter((p) => saved.includes(p.id));
       const summary = kept.map((k) => `#${k.id} ${k.name} (${k.desc})`).join('\n');
       navigator.clipboard.writeText(summary);
       alert(`Copied ${kept.length} curated variations to clipboard:\n\n` + summary);
@@ -65,7 +92,11 @@ async function init() {
   const renderBtn = document.getElementById('renderAllBtn');
   if (renderBtn) {
     renderBtn.addEventListener('click', () => {
-      alert(`To re-render all 12 ${activeSpecies} variations with WebGPU and generate contact sheet, run:\nnode tools/variations.mjs --species ${activeSpecies} --style ${activeStyle}`);
+      if (activeMode === 'patterns') {
+        alert('To re-render all 12 Madhubani pattern styles on canonical horse, run:\nnode tools/pattern_variations.mjs');
+      } else {
+        alert(`To re-render all 12 ${activeSpecies} conformation forms, run:\nnode tools/variations.mjs --species ${activeSpecies} --style ${activeStyle}`);
+      }
     });
   }
 
@@ -78,10 +109,12 @@ async function buildGrid() {
   grid.innerHTML = '';
   const status = document.getElementById('status');
 
-  const curatedKey = `curated_${activeSpecies}`;
+  const curatedKey = `curated_${activeSpecies}_${activeMode}`;
   const curatedIds = new Set(JSON.parse(localStorage.getItem(curatedKey) || '[]'));
 
-  for (const p of VARIATION_PRESETS) {
+  const list = activeMode === 'patterns' ? PATTERN_PRESETS : VARIATION_PRESETS;
+
+  for (const p of list) {
     const card = document.createElement('div');
     card.className = 'card' + (curatedIds.has(p.id) ? ' curated' : '');
     card.id = `card_${p.id}`;
@@ -112,34 +145,55 @@ async function buildGrid() {
     imgWrap.className = 'card-img-wrap';
     const img = document.createElement('img');
     img.className = 'card-img';
-    img.src = `/variations/${activeSpecies}/variant_${String(p.id).padStart(2, '0')}.png`;
+
+    let liveUrl = '';
+    if (activeMode === 'patterns') {
+      img.src = `/variations/patterns/horse_pattern_${String(p.id).padStart(2, '0')}.png`;
+      liveUrl = `/?style=madhubani&species=horse&mstyle=${p.style}&palette=${p.palette}&mtiles=chain&seed=7`;
+    } else {
+      img.src = `/variations/${activeSpecies}/variant_${String(p.id).padStart(2, '0')}.png`;
+      liveUrl = `/?species=${activeSpecies}&preset=${p.id}&style=madhubani&mstyle=${activeStyle}&mtiles=chain`;
+    }
+
     img.alt = p.name;
     img.onerror = () => {
-      imgWrap.innerHTML = `<div style="font-size:11px;color:#887766;text-align:center;padding:20px;">[Variant #${p.id} Preview Pending]<br><a href="/?species=${activeSpecies}&preset=${p.id}&style=madhubani&mstyle=${activeStyle}&mtiles=chain" target="_blank" style="color:#b84a28;">Open 3D Live</a></div>`;
+      imgWrap.innerHTML = `<div style="font-size:11px;color:#887766;text-align:center;padding:20px;">[Variant #${p.id} Preview Pending]<br><a href="${liveUrl}" target="_blank" style="color:#b84a28;">Open 3D Live</a></div>`;
     };
     imgWrap.appendChild(img);
 
     const body = document.createElement('div');
     body.className = 'card-body';
-    body.textContent = p.desc;
+    body.innerHTML = `<div>${p.desc}</div>`;
 
     const footer = document.createElement('div');
     footer.className = 'card-footer';
-    footer.innerHTML = `<span>Seed: ${p.id} · ${activeStyle}</span><a class="inspect-link" href="/?species=${activeSpecies}&preset=${p.id}&style=madhubani&mstyle=${activeStyle}&mtiles=chain" target="_blank">Inspect in 3D ↗</a>`;
+    if (activeMode === 'patterns') {
+      footer.innerHTML = `<span>Style: <b>${p.style}</b> | Pal: <b>${p.palName}</b></span><a class="inspect-link" href="${liveUrl}" target="_blank">Open 3D →</a>`;
+    } else {
+      footer.innerHTML = `<span>Species: ${activeSpecies}</span><a class="inspect-link" href="${liveUrl}" target="_blank">Open 3D →</a>`;
+    }
 
     card.appendChild(header);
     card.appendChild(imgWrap);
     card.appendChild(body);
     card.appendChild(footer);
+
     grid.appendChild(card);
   }
 
-  function updateStatus() {
-    status.textContent = `12 ${activeSpecies} variations · ${curatedIds.size}/12 kept for artist curation`;
-  }
   updateStatus();
-
   window.__variationsReady = true;
 }
 
-window.addEventListener('DOMContentLoaded', init);
+function updateStatus() {
+  const status = document.getElementById('status');
+  if (!status) return;
+  const curatedKey = `curated_${activeSpecies}_${activeMode}`;
+  const count = JSON.parse(localStorage.getItem(curatedKey) || '[]').length;
+  const modeLabel = activeMode === 'patterns' ? 'Pattern Variety' : 'Conformation Morphs';
+  status.textContent = `Mode: ${modeLabel} · Curated: ${count}/12 kept`;
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', init);
+}

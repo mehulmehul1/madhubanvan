@@ -9,18 +9,30 @@
   "module": "./src/index.js",
   "types": "./src/index.d.ts",
   "exports": {
-    ".": { "types": "./src/index.d.ts", "default": "./src/index.js" },
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
     "./species/*": "./src/species/*/index.js",
     "./worker": "./src/worker.js",
     "./bake": "./src/bake.js",
     "./package.json": "./package.json"
   },
-  "bin": { "procedural-animals-bake": "./tools/bake.mjs" },
-  "sideEffects": ["./src/worker.js"],
-  "engines": { "node": ">=18" },
-  "peerDependencies": { "three": ">=0.186.0" },
+  "bin": {
+    "procedural-animals-bake": "./tools/bake.mjs"
+  },
+  "sideEffects": [
+    "./src/worker.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "three": ">=0.186.0"
+  },
   "dependencies": {
-    "three": "^0.186.0"
+    "jolt-physics": "^1.1.2",
+    "three": ">=0.186.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
@@ -37,5 +49,15 @@
     "build:pages": "node showcase/build.mjs --pages",
     "test": "node tools/test.mjs"
   },
-  "keywords": ["three", "threejs", "procedural", "animals", "webgpu", "tsl", "madhubani", "sdf", "fur"]
+  "keywords": [
+    "three",
+    "threejs",
+    "procedural",
+    "animals",
+    "webgpu",
+    "tsl",
+    "madhubani",
+    "sdf",
+    "fur"
+  ]
 }

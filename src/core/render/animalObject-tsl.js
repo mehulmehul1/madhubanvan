@@ -78,7 +78,20 @@ export function createAnimalObject(data, species = {}, opts = {}) {
     tiles: opts.madhubaniTiles ?? 'chain',
     madGrid: madTex,
   });
-  if (opts.madhubaniMotifM && mats.mad?.setMotifM) mats.mad.setMotifM(opts.madhubaniMotifM);
+  // Automatic per-species motif scaling: scales with creature body length if not explicitly overridden
+  let autoMotifM = 0.06;
+  if (data.pos && data.pos.length >= 6) {
+    let minZ = Infinity, maxZ = -Infinity;
+    for (let i = 2; i < data.pos.length; i += 3) {
+      const z = data.pos[i];
+      if (z < minZ) minZ = z;
+      if (z > maxZ) maxZ = z;
+    }
+    const len = maxZ - minZ;
+    autoMotifM = Math.min(0.08, Math.max(0.015, len / 28));
+  }
+  const motifM = opts.madhubaniMotifM ?? autoMotifM;
+  if (mats.mad?.setMotifM) mats.mad.setMotifM(motifM);
   const madMode = mats.style === 'madhubani';
 
   // painted eyes (bind-space centres + iris tint)

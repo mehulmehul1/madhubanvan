@@ -1,130 +1,183 @@
-// fox-fullik.ts — self-contained integration of fox rig with FulliK IK solver
-// Maps fox rig joints to FulliK Bone3D chains, solves IK for ground contact.
-// No dependency on mass.ts/species.ts — works with just the fox rig.
+// fox-fullik.ts — Fox rig mapped to FulliK IK solver with 4 bilateral legs & anatomical hinges.
+// In-tree vendor: imports directly from ../../core/ik/fullik/fik.module.js with zero external path dependencies.
 
-import { buildRig } from '../../core/rig/rig.js'
-import { foxJoints, foxRig, TAIL_SEGS, HEAD_O, SH } from './rig.js'
-import { Bone3D, Chain3D, Joint3D, V3, IKSolver } from '../../../../../fullik-repo/src/FIK.js'
+import { foxJoints, foxRig } from './rig.js'
+import * as FIK from '../../core/ik/fullik/fik.module.js'
 
-// ------------------------------------------------------------------ Load fox rig (bind pose)
-const J = foxJoints({})
-console.log('FOX JOINT COUNT:', Object.keys(J).length)
-console.log('FOX JOINTS sample:', Object.keys(J).slice(0, 8).join(', ') + ' ...')
+const { Bone3D, Chain3D, Joint3D, V3, J_BALL, J_GLOBAL, J_LOCAL } = FIK as any
 
-// ------------------------------------------------------------------ Helper: build a FulliK Bone3D from a joint name pair
-function buildBone(name: string, headName: string, tailName: string): any {
-  const h = J[headName] as number[]
-  const t = J[tailName] as number[]
+export interface LegSolved {
+  bones: number
+  solved: number
+  distance: number
+  footEnd: number[]
+  distMm: number
+  converged: boolean
+}
+
+export interface FoxIKSolution {
+  solved: Record<string, LegSolved>
+  chains: Record<string, any>
+  targets: Record<string, number[]>
+  maxResidualMm: number
+  converged: boolean
+  stance: {
+    hull: number[][]
+    area: number
+    inside: boolean
+    margin: number
+  }
+}
+
+export function buildBone(J: Record<string, number[]>, name: string, headName: string, tailName: string): any {
+  const h = J[headName]
+  const t = J[tailName]
   if (!h || !t) throw new Error(`bone ${name}: missing ${!h ? headName : tailName}`)
-  const dx = t[0]! - h[0]!
-  const dy = t[1]! - h[1]!
-  const dz = t[2]! - h[2]!
-  const len = Math.hypot(dx, dy, dz)
-  return new Bone3D(
-    new V3(h[0]!, h[1]!, h[2]!),
-    new V3(t[0]!, t[1]!, t[2]!),
-    new V3(dx / len, dy / len, dz / len),
-    len
-  )
+  const bone = new Bone3D(new V3(h[0], h[1], h[2]), new V3(t[0], t[1], t[2]))
+  bone.name = name
+  return bone
 }
 
-// ------------------------------------------------------------------ Map fox bones to FulliK chains (from quadrupedBones / quadrupedLimbs)
-// Chains: spine, FL (front-left), HL (hind-left), earL, jaw
-const chainDefs = [
-  { name: 'spine', bones: ['head', 'neck2', 'neck1', 'chest', 'spine3', 'spine2', 'spine1', 'pelvis'] },
-  { name: 'FL', bones: ['scapulaL', 'humerusL', 'radiusL', 'metacarpusL', 'fpawL'] },
-  { name: 'HL', bones: ['femurL', 'tibiaL', 'metatarsusL', 'hpawL'] },
-  { name: 'earL', bones: ['earL'] },
-  { name: 'jaw', bones: ['jaw'] }
-]
+function applyBoneConstraint(b: any, bName: string) {
+  const dir = b.getDirectionUV()
+  const rotAxis = new V3(1, 0, 0) // transverse / lateral flexion-extension axis
+  const refAxis = dir.clone()
+  refAxis.projectOnPlane(rotAxis)
 
-const chains: Record<string, Chain3D> = {}
-for (const def of chainDefs) {
-  const c = new Chain3D()
-  c.name = def.name
-  for (const bName of def.bones) {
-    // The rig BONES map has names like 'scapulaL' from the {S} expansion
-    const boneDef = foxRig().BONE[bName as string]
-    if (!boneDef) {
-      console.warn(`SKIP bone ${bName}: not found in BONES`)
-      continue
+  // Knee (tibia), hock (metatarsus), elbow (radius), carpus (metacarpus) are hinges
+  if (
+    bName.startsWith('tibia') ||
+    bName.startsWith('metatarsus') ||
+    bName.startsWith('radius') ||
+    bName.startsWith('metacarpus')
+  ) {
+    b.joint.setHinge(J_GLOBAL, rotAxis, 75, 75, refAxis)
+  } else {
+    // Scapula, shoulder, hip, paws have ball joint freedom
+    b.setBallJointConstraintDegs(60)
+  }
+}
+
+export function solveFoxIK(options: {
+  params?: any
+  tolMm?: number
+  maxIter?: number
+  ground?: (x: number, z: number) => number
+} = {}): FoxIKSolution {
+  const rig = foxRig(options.params || {})
+  const J = rig.J as Record<string, number[]>
+  const tolMm = options.tolMm ?? 2.0
+  const tolM = tolMm / 1000.0
+  const maxIters = options.maxIter ?? 40
+
+  const chainDefs = [
+    { name: 'FL', bones: ['scapulaL', 'humerusL', 'radiusL', 'metacarpusL', 'fpawL'], toe: 'ftoeL', isLeg: true },
+    { name: 'FR', bones: ['scapulaR', 'humerusR', 'radiusR', 'metacarpusR', 'fpawR'], toe: 'ftoeR', isLeg: true },
+    { name: 'HL', bones: ['femurL', 'tibiaL', 'metatarsusL', 'hpawL'], toe: 'htoeL', isLeg: true },
+    { name: 'HR', bones: ['femurR', 'tibiaR', 'metatarsusR', 'hpawR'], toe: 'htoeR', isLeg: true },
+    { name: 'spine', bones: ['head', 'neck2', 'neck1', 'chest', 'spine3', 'spine2', 'spine1', 'pelvis'], isLeg: false },
+  ]
+
+  const chains: Record<string, any> = {}
+  const rigBones = rig.BONE
+
+  for (const def of chainDefs) {
+    const c = new Chain3D()
+    c.name = def.name
+    for (const bName of def.bones) {
+      const boneDef = rigBones[bName]
+      if (!boneDef) continue
+      const b = buildBone(J, bName, boneDef.headJ, boneDef.tailJ)
+      applyBoneConstraint(b, bName)
+      c.addBone(b)
     }
-    const b = buildBone(bName, boneDef.headJ, boneDef.tailJ)
-    b.name = bName
-    // Ball joint with 30° cone constraint for natural motion
-    b.setBallJointConstraintDegs(30)
-    c.addBone(b)
+    chains[def.name] = c
   }
-  chains[def.name] = c
-}
 
-console.log('BUILT CHAINS:', Object.keys(chains).join(', '))
+  const groundFn = options.ground || ((x: number, z: number) => 0)
+  const targets: Record<string, number[]> = {}
 
-// ------------------------------------------------------------------ Set ground targets (feet on y=0, the standing plane)
-// In the bind pose, ftoeL / htoeL joint y is ~0.0085. We target them to y=0.
-const targets: Record<string, any[]> = {}
-// FL foot: ftoeL -> target (x, 0, z). We add a small forward offset for balanced stance.
-if (J.ftoeL) {
-  targets.FL = [J.ftoeL![0], 0.0, J.ftoeL![2]!] as number[]
-}
-// HL foot: htoeL -> target (x, 0, z)
-if (J.htoeL) {
-  targets.HL = [J.htoeL![0], 0.0, J.htoeL![2]!] as number[]
-}
-console.log('GROUND TARGETS:', targets)
+  if (J.ftoeL) targets.FL = [J.ftoeL[0], groundFn(J.ftoeL[0], J.ftoeL[2]), J.ftoeL[2]]
+  if (J.ftoeR) targets.FR = [J.ftoeR[0], groundFn(J.ftoeR[0], J.ftoeR[2]), J.ftoeR[2]]
+  if (J.htoeL) targets.HL = [J.htoeL[0], groundFn(J.htoeL[0], J.htoeL[2]), J.htoeL[2]]
+  if (J.htoeR) targets.HR = [J.htoeR[0], groundFn(J.htoeR[0], J.htoeR[2]), J.htoeR[2]]
 
-// ------------------------------------------------------------------ Solve IK for each chain
-const solved: Record<string, any> = {}
-for (const [name, c] of Object.entries(chains)) {
-  if (!targets[name]) {
-    console.log(`SKIP ${name}: no ground target defined`)
-    continue
+  const solved: Record<string, LegSolved> = {}
+  let maxResidualMm = 0
+  let allConverged = true
+
+  for (const [name, c] of Object.entries(chains)) {
+    if (!targets[name]) continue
+    const t = targets[name]
+    const targetV3 = new V3(t[0], t[1], t[2])
+    c.useEmbeddedTarget = true
+    c.embeddedTarget.copy(targetV3)
+    c.maxIteration = maxIters
+    c.solveDistanceThreshold = tolM
+    c.precision = 0.001
+    c.solveForEmbeddedTarget()
+
+    const distMm = (c.currentSolveDistance || 0) * 1000.0
+    const endBone = c.bones[c.bones.length - 1]
+    const endPos = endBone ? [endBone.end.x, endBone.end.y, endBone.end.z] : [0, 0, 0]
+    const converged = distMm <= tolMm
+
+    if (distMm > maxResidualMm) maxResidualMm = distMm
+    if (!converged) allConverged = false
+
+    solved[name] = {
+      bones: c.bones.length,
+      solved: c.numBones,
+      distance: c.currentSolveDistance,
+      footEnd: endPos,
+      distMm,
+      converged,
+    }
   }
-  const target = new V3(targets[name][0]!, targets[name][1]!, targets[name][2]!)
-  c.useEmbeddedTarget = true
-  c.embeddedTarget.copy(target)
-  c.maxIteration = 40       // same as IKSolver default
-  c.solveDistanceThreshold = 0.001   // 1 mm
-  c.precision = 0.001    // 0.1°
-  c.solveForEmbeddedTarget()
-  solved[name] = { bones: c.bones.length, solved: c.numBones, distance: c.currentSolveDistance }
-  console.log(`IK SOLVED ${name}: bones=${c.bones.length} iters=${c.maxIteration} dist=${(c.currentSolveDistance as number).toFixed(5)}`)
+
+  const footPoints = [
+    solved.FL ? [solved.FL.footEnd[0], solved.FL.footEnd[2]] : [J.ftoeL[0], J.ftoeL[2]],
+    solved.FR ? [solved.FR.footEnd[0], solved.FR.footEnd[2]] : [J.ftoeR[0], J.ftoeR[2]],
+    solved.HR ? [solved.HR.footEnd[0], solved.HR.footEnd[2]] : [J.htoeR[0], J.htoeR[2]],
+    solved.HL ? [solved.HL.footEnd[0], solved.HL.footEnd[2]] : [J.htoeL[0], J.htoeL[2]],
+  ]
+
+  let area = 0
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4
+    area += footPoints[i][0] * footPoints[j][1] - footPoints[j][0] * footPoints[i][1]
+  }
+  area = Math.abs(area) * 0.5
+
+  const comZ = J.lumbarMid ? J.lumbarMid[2] : 0
+  const comX = 0
+
+  let minMargin = Infinity
+  for (let i = 0; i < 4; i++) {
+    const p1 = footPoints[i]
+    const p2 = footPoints[(i + 1) % 4]
+    const dx = p2[0] - p1[0]
+    const dz = p2[1] - p1[1]
+    const len = Math.hypot(dx, dz)
+    if (len > 1e-6) {
+      const dist = Math.abs((p2[0] - p1[0]) * (p1[1] - comZ) - (p1[0] - comX) * (p2[1] - p1[1])) / len
+      if (dist < minMargin) minMargin = dist
+    }
+  }
+
+  return {
+    solved,
+    chains,
+    targets,
+    maxResidualMm,
+    converged: allConverged,
+    stance: {
+      hull: footPoints,
+      area,
+      inside: minMargin > 0,
+      margin: minMargin,
+    },
+  }
 }
 
-// ------------------------------------------------------------------ Output: solved pose + joint angles summary
-console.log('--- SOLVED POSE ---')
-for (const [name, info] of Object.entries(solved)) {
-  console.log(`${name}: ${info.solved} bones solved, final distance=${info.distance.toFixed(5)} m`)
-}
-
-// ------------------------------------------------------------------ Simple static check (approx): compute CoM margin from solved joint positions
-// Rough estimate: average the foot positions, compute the convex hull, check if CoM projects inside.
-// For now, we just check the bind pose foot positions vs y=0 to give a baseline.
-function approxMargin(): number {
-  // Take the two hind feet positions, average them, check if the spine midpoint is higher
-  const hipL = J.hipL as number[]
-  const htoeL = J.htoeL as number[]
-  if (!hipL || !htoeL) return 0
-  const footAvgX = (hipL[0] + htoeL[0]) / 2
-  const footAvgZ = (hipL[2] + htoeL[2]) / 2
-  // Spine midpoint (rough): between pelvis and head
-  const spineMidX = (J.pelvis ? J.pelvis[0] : 0) + (J.head ? (J.head[0] - J.pelvis![0]) * 0.6 : 0)
-  const spineMidZ = (J.pelvis ? J.pelvis[2] : 0) + (J.head ? (J.head[2] - J.pelvis![2]) * 0.6 : 0)
-  // Simple margin heuristic: if feet are at similar x positions and spine is centered, margin > 0
-  const spread = Math.abs(hipL[0] - htoeL[0])
-  return spread < 0.1 && Math.abs(spineMidX) < 0.05 ? 0.02 : -0.01
-}
-
-const margin = approxMargin()
-const verdict = margin > 0 ? 'STANDS (approx margin > 0)' : 'FALLS (approx margin < 0)'
-console.log('STATIC CHECK: ' + verdict)
-
-// ------------------------------------------------------------------ Summary
-console.log('--- FOX FULLIK COMPLETE ---')
-console.log('Chains solved:', Object.keys(solved).length)
-console.log('Target feet placed on y=0 plane')
-console.log('IK solver: FulliK FABRIK (geometry only, no dynamics)')
-console.log('Static check: approximate CoM margin from joint positions')
-console.log('Next step: add mass.ts validation + JoltPhysics dynamics layer')
-
-export { solved, chains, targets, margin, verdict }
+export { foxJoints, foxRig }
