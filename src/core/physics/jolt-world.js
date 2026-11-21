@@ -180,8 +180,10 @@ export class JoltWorld {
     const shape = shapeSettings.Create().Get();
     this.activeShapes.add(shape);
 
-    const pos = this.rv3(0, position[0], position[1], position[2]);
     const rad = (angleDeg * Math.PI) / 180;
+    // Lower center so that top surface at z=0 lands exactly at position[1]
+    const topOffset = (thickness * 0.5) / Math.cos(rad);
+    const pos = this.rv3(0, position[0], position[1] - topOffset, position[2]);
     // Rotation around X axis (negative angle lifts +Z forward side uphill)
     const rot = this.quat(0, Math.sin(-rad * 0.5), 0, 0, Math.cos(-rad * 0.5));
 

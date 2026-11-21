@@ -28,16 +28,17 @@ function applyBoneConstraint(b, bName) {
   refAxis.projectOnPlane(rotAxis);
 
   // Knee (tibia), hock (metatarsus), elbow (radius), carpus (metacarpus) are hinges
+  // Flexion-extension allows 120° hinge swing clearance
   if (
     bName.startsWith('tibia') ||
     bName.startsWith('metatarsus') ||
     bName.startsWith('radius') ||
     bName.startsWith('metacarpus')
   ) {
-    b.joint.setHinge(J_GLOBAL, rotAxis, 75, 75, refAxis);
+    b.joint.setHinge(J_GLOBAL, rotAxis, 120, 120, refAxis);
   } else {
     // Scapula, shoulder, hip, paws have ball joint freedom
-    b.setBallJointConstraintDegs(60);
+    b.setBallJointConstraintDegs(85);
   }
 }
 
@@ -76,14 +77,14 @@ export function solveFoxIK(options = {}) {
     chains[def.name] = c;
   }
 
-  // Ground plane foothold targets (default y=0 or custom ground callback)
+  // Ground plane foothold targets (default y=0 or custom ground callback, or explicit foothold targets from gait planner)
   const groundFn = options.ground || ((x, z) => 0);
-  const targets = {};
+  const targets = options.targets ? { ...options.targets } : {};
 
-  if (J.ftoeL) targets.FL = [J.ftoeL[0], groundFn(J.ftoeL[0], J.ftoeL[2]), J.ftoeL[2]];
-  if (J.ftoeR) targets.FR = [J.ftoeR[0], groundFn(J.ftoeR[0], J.ftoeR[2]), J.ftoeR[2]];
-  if (J.htoeL) targets.HL = [J.htoeL[0], groundFn(J.htoeL[0], J.htoeL[2]), J.htoeL[2]];
-  if (J.htoeR) targets.HR = [J.htoeR[0], groundFn(J.htoeR[0], J.htoeR[2]), J.htoeR[2]];
+  if (!targets.FL && J.ftoeL) targets.FL = [J.ftoeL[0], groundFn(J.ftoeL[0], J.ftoeL[2]), J.ftoeL[2]];
+  if (!targets.FR && J.ftoeR) targets.FR = [J.ftoeR[0], groundFn(J.ftoeR[0], J.ftoeR[2]), J.ftoeR[2]];
+  if (!targets.HL && J.htoeL) targets.HL = [J.htoeL[0], groundFn(J.htoeL[0], J.htoeL[2]), J.htoeL[2]];
+  if (!targets.HR && J.htoeR) targets.HR = [J.htoeR[0], groundFn(J.htoeR[0], J.htoeR[2]), J.htoeR[2]];
 
   const solved = {};
   let maxResidualMm = 0;

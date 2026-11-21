@@ -49,8 +49,13 @@ async function initScene() {
   const Jolt = await getJolt();
   joltWorld = new JoltWorld(Jolt);
 
-  // Load Reference Fox (Left) and Physics Fox (Right)
+  // Load Reference Fox (Left) and Physics Fox (Right) mounted in outer parent groups
+  // Preserving binding engine contract: animal.object MUST keep identity transform (llms.txt:47, 172)
   try {
+    const refContainer = new THREE.Group();
+    refContainer.position.set(-0.65, 0, 0);
+    scene.add(refContainer);
+
     refFox = await createAnimal({
       species: 'fox',
       quality: 'medium',
@@ -59,8 +64,14 @@ async function initScene() {
       palette: 0,
       mtiles: 'chain',
     });
-    refFox.object.position.set(-0.65, 0, 0);
-    scene.add(refFox.object);
+    refFox.object.position.set(0, 0, 0); // Strict identity transform
+    refFox.object.rotation.set(0, 0, 0);
+    refContainer.add(refFox.object);
+
+    const physContainer = new THREE.Group();
+    physContainer.position.set(0.65, 0, 0);
+    scene.add(physContainer);
+    window.physContainer = physContainer;
 
     physFox = await createAnimal({
       species: 'fox',
@@ -70,8 +81,9 @@ async function initScene() {
       palette: 0,
       mtiles: 'chain',
     });
-    physFox.object.position.set(0.65, 0, 0);
-    scene.add(physFox.object);
+    physFox.object.position.set(0, 0, 0); // Strict identity transform
+    physFox.object.rotation.set(0, 0, 0);
+    physContainer.add(physFox.object);
   } catch (err) {
     console.error('Failed to create animal meshes, falling back to procedural proxy:', err);
   }
@@ -190,12 +202,15 @@ function animate() {
     joltWorld.step(dt);
     tel = controller.step(dt);
 
-    // Sync Physics Fox position with Jolt core
-    if (physFox && physFox.object) {
+    // Sync Physics Fox position via parent container while preserving animal.object identity (llms.txt:47, 172)
+    if (window.physContainer && physFox && physFox.object) {
       const tPos = joltWorld.getPosition(controller.thoraxId);
       const pPos = joltWorld.getPosition(controller.pelvisId);
-      physFox.object.position.set((tPos[0] + pPos[0]) * 0.5, (tPos[1] + pPos[1]) * 0.5 - 0.38, (tPos[2] + pPos[2]) * 0.5);
-      physFox.object.rotation.x = -controller.grfController.pitchRad;
+      window.physContainer.position.set(0.65 + (tPos[0] + pPos[0]) * 0.5, (tPos[1] + pPos[1]) * 0.5 - 0.38, (tPos[2] + pPos[2]) * 0.5);
+      window.physContainer.rotation.x = -controller.grfController.pitchRad;
+      // Ensure animal.object remains strict identity transform
+      physFox.object.position.set(0, 0, 0);
+      physFox.object.rotation.set(0, 0, 0);
     }
   }
 

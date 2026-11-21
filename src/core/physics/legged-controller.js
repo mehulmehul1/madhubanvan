@@ -9,6 +9,7 @@
 
 import { solveFoxIK } from '../../species/fox/fox-fullik.js';
 import { foxJoints, TAIL_SEGS } from '../../species/fox/rig.js';
+import { QuadrupedGaitPlanner } from './gait-planner.js';
 
 export const GRAVITY = 9.81; // m/s^2
 
@@ -24,6 +25,7 @@ export class DimensionlessGRFController {
     this.wheelbase = options.wheelbase ?? 0.29; // Distance between front/hind sockets ~0.29 m
     this.comHeight = options.comHeight ?? 0.30; // Standing CoM height ~0.30 m
     this.gravityFree = options.gravityFree ?? false;
+    this.disableSlopeFeedforward = options.disableSlopeFeedforward ?? false;
 
     // Derived dimensionless impedance gains
     this.omega0 = Math.sqrt(GRAVITY / Math.max(0.01, this.legLength));
@@ -90,7 +92,10 @@ export class DimensionlessGRFController {
 
     // Dynamic moment load transfer on slope / pitch:
     // delta_split = (h_com / wheelbase) * sin(slope)
-    const deltaSplit = (this.comHeight / Math.max(0.1, this.wheelbase)) * Math.sin(effectivePitch);
+    // Ablation mode: disableSlopeFeedforward = true sets deltaSplit = 0 to measure emergent Jolt gravity torque
+    const deltaSplit = this.disableSlopeFeedforward
+      ? 0
+      : (this.comHeight / Math.max(0.1, this.wheelbase)) * Math.sin(effectivePitch);
     let hindSplit = (1.0 - this.restingForeSplit) + deltaSplit;
     hindSplit = Math.max(0.10, Math.min(0.90, hindSplit));
     const foreSplit = 1.0 - hindSplit;
@@ -129,10 +134,36 @@ export class DimensionlessGRFController {
     // Horizontal stabilization damping + slope traction
     const fTractionZ = effectivePitch > 0 ? (this.totalMassKg * GRAVITY * Math.sin(effectivePitch)) : 0;
 
-    const fForeX = -this.cHoriz * tVel[0];
-    const fForeZ = -this.cHoriz * tVel[2] + fTractionZ * foreSplit;
-    const fHindX = -this.cHoriz * pVel[0];
-    const fHindZ = -this.cHoriz * pVel[2] + fTractionZ * hindSplit;
+    // Locomotion traction & heading propulsion (if walking)
+    let fDriveX = 0, fDriveZ = 0, torqueYaw = 0;
+    if (core.walk && core.gaitPlanner) {
+      const heading = core.gaitPlanner.headingRad;
+      const fwdX = Math.sin(heading);
+      const fwdZ = Math.cos(heading);
+      const fwdSpeed = tVel[0] * fwdX + tVel[2] * fwdZ;
+      const speedErr = core.desiredSpeed - fwdSpeed;
+      const driveForce = Math.max(-50, Math.min(50, 45.0 * speedErr));
+      fDriveX = driveForce * fwdX;
+      fDriveZ = driveForce * fwdZ;
+
+      const tAngVel = world.getAngularVelocity(thoraxId);
+      const yawErr = core.yawRateRadS - tAngVel[1];
+      torqueYaw = Math.max(-15, Math.min(15, 12.0 * yawErr));
+    }
+
+    const initThoraxZ = (core.initialPos ? core.initialPos[2] : 0) + 0.14;
+    const initPelvisZ = (core.initialPos ? core.initialPos[2] : 0) - 0.15;
+    const initX = core.initialPos ? core.initialPos[0] : 0;
+
+    const fStanceHoldThoraxZ = core.walk ? 0 : -80.0 * (tPos[2] - initThoraxZ);
+    const fStanceHoldPelvisZ = core.walk ? 0 : -80.0 * (pPos[2] - initPelvisZ);
+    const fStanceHoldThoraxX = core.walk ? 0 : -60.0 * (tPos[0] - initX);
+    const fStanceHoldPelvisX = core.walk ? 0 : -60.0 * (pPos[0] - initX);
+
+    const fForeX = -this.cHoriz * tVel[0] + fStanceHoldThoraxX + fDriveX * foreSplit;
+    const fForeZ = -this.cHoriz * tVel[2] + fStanceHoldThoraxZ + fDriveZ * foreSplit;
+    const fHindX = -this.cHoriz * pVel[0] + fStanceHoldPelvisX + fDriveX * hindSplit;
+    const fHindZ = -this.cHoriz * pVel[2] + fStanceHoldPelvisZ + fDriveZ * hindSplit;
 
     // Pitch restoring torque towards terrain slope
     const targetPitch = core.targetPitchRad || slopePitchRad;
@@ -140,11 +171,11 @@ export class DimensionlessGRFController {
 
     // Apply forces to Thorax (front)
     world.addForce(thoraxId, [fForeX, fForeY, fForeZ]);
-    world.addTorque(thoraxId, [torquePitch * 0.5, 0, 0]);
+    world.addTorque(thoraxId, [-torquePitch * 0.5, torqueYaw * 0.5, 0]);
 
     // Apply forces to Pelvis (rear)
     world.addForce(pelvisId, [fHindX, fHindY, fHindZ]);
-    world.addTorque(pelvisId, [-torquePitch * 0.5, 0, 0]);
+    world.addTorque(pelvisId, [torquePitch * 0.5, torqueYaw * 0.5, 0]);
 
     // Track physical ground penetration (< 2.0 mm gate)
     const frontPawY = tPos[1] - nominalStandY;
@@ -183,6 +214,7 @@ export class FoxSplitAuthorityController {
     this.nominalStandY = options.nominalStandY ?? 0.38;
     this.targetPitchRad = options.targetPitchRad ?? 0;
     this.totalMassKg = options.totalMassKg ?? 8.5;
+    this.initialPos = options.position || [0, 0, 0];
 
     // 1. Build Centroidal Dual Core (Pelvis + Thorax)
     this.initCentroidalCore(options);
@@ -190,7 +222,7 @@ export class FoxSplitAuthorityController {
     // 2. Build Dynamic Secondary Chains (Tail + Ears)
     this.initSecondaryChains(options);
 
-    // 3. Stance GRF Controller
+    // Stance GRF Controller
     this.grfController = new DimensionlessGRFController({
       totalMassKg: this.totalMassKg,
       restingForeSplit: options.restingForeSplit ?? 0.566,
@@ -199,7 +231,21 @@ export class FoxSplitAuthorityController {
       wheelbase: options.wheelbase ?? 0.29,
       comHeight: options.comHeight ?? 0.30,
       gravityFree: this.gravityFree,
+      disableSlopeFeedforward: options.disableSlopeFeedforward ?? false,
     });
+
+    // Locomotion & Gait Planner
+    this.walk = options.walk ?? false;
+    this.desiredSpeed = options.desiredSpeed ?? 0.8; // 0.8 m/s forward walk
+    this.yawRateRadS = options.yawRateRadS ?? 0;
+    this.gaitPlanner = options.gaitPlanner || (this.walk ? new QuadrupedGaitPlanner({
+      nominalStandY: this.nominalStandY,
+      groundFn: this.groundFn,
+      strideFrequencyHz: options.strideFrequencyHz ?? 2.5,
+      dutyFactor: options.dutyFactor ?? 0.60,
+      headingRad: options.headingRad ?? 0,
+      yawRateRadS: this.yawRateRadS,
+    }) : null);
 
     // Register wrench generator with JoltWorld
     this.world.addWrenchGenerator({
@@ -210,6 +256,7 @@ export class FoxSplitAuthorityController {
     this.ikTelemetry = {
       maxResidualMm: 0,
       stanceSlipMm: 0,
+      walkingSlipMm: 0,
       solvedFeet: {},
       jointTorquesNm: {},
     };
@@ -345,25 +392,49 @@ export class FoxSplitAuthorityController {
    * Solve FulliK limbs and inverse-dynamics joint torques
    */
   updateLimbIK(dt) {
+    let plannedTargets = undefined;
+    if (this.walk && this.gaitPlanner) {
+      const tPos = this.world.getPosition(this.thoraxId);
+      const pPos = this.world.getPosition(this.pelvisId);
+      const tVel = this.world.getLinearVelocity(this.thoraxId);
+      const centerPos = [(tPos[0] + pPos[0]) * 0.5, (tPos[1] + pPos[1]) * 0.5, (tPos[2] + pPos[2]) * 0.5];
+      const plan = this.gaitPlanner.update(
+        dt,
+        {
+          position: centerPos,
+          linearVelocity: tVel,
+          desiredSpeed: this.desiredSpeed,
+          yawRateRadS: this.yawRateRadS,
+        },
+        (x, z) => this.sampleGround(x, z)
+      );
+      plannedTargets = plan.targets;
+      this.ikTelemetry.walkingSlipMm = plan.maxWalkingSlipMm;
+      this.ikTelemetry.stanceSlipMm = plan.maxWalkingSlipMm;
+    }
+
     // Solve FulliK for all 4 legs
     const ikResult = solveFoxIK({
       ground: (x, z) => this.sampleGround(x, z),
+      targets: plannedTargets,
       tolMm: 2.0,
-      maxIter: 30,
+      maxIter: 50,
     });
 
     this.ikTelemetry.maxResidualMm = ikResult.maxResidualMm;
     this.ikTelemetry.solvedFeet = ikResult.solved;
 
-    // Stance Foot Slip Measurement
-    if (this.grfController.prevFootPos && ikResult.solved.FL) {
-      const curFL = ikResult.solved.FL.footEnd;
-      const prevFL = this.grfController.prevFootPos;
-      const slipM = Math.hypot(curFL[0] - prevFL[0], curFL[2] - prevFL[2]);
-      this.ikTelemetry.stanceSlipMm = slipM * 1000.0;
-    }
-    if (ikResult.solved.FL) {
-      this.grfController.prevFootPos = [...ikResult.solved.FL.footEnd];
+    // Stance Foot Slip Measurement (for stationary mode)
+    if (!this.walk) {
+      if (this.grfController.prevFootPos && ikResult.solved.FL) {
+        const curFL = ikResult.solved.FL.footEnd;
+        const prevFL = this.grfController.prevFootPos;
+        const slipM = Math.hypot(curFL[0] - prevFL[0], curFL[2] - prevFL[2]);
+        this.ikTelemetry.stanceSlipMm = slipM * 1000.0;
+      }
+      if (ikResult.solved.FL) {
+        this.grfController.prevFootPos = [...ikResult.solved.FL.footEnd];
+      }
     }
 
     // Inverse Dynamics Joint Torques: tau = r x F_GRF
@@ -406,11 +477,13 @@ export class FoxSplitAuthorityController {
       foreForceN: this.grfController.foreForce,
       hindForceN: this.grfController.hindForce,
       pitchDeg: (this.grfController.pitchRad * 180) / Math.PI,
+      headingDeg: this.gaitPlanner ? (this.gaitPlanner.headingRad * 180) / Math.PI : 0,
       isSettled: this.grfController.isSettled,
       settleTimeS: this.grfController.settleTimeS,
       maxPenetrationMm: this.grfController.maxPenetrationM * 1000.0,
       ikResidualMm: this.ikTelemetry.maxResidualMm,
       stanceSlipMm: this.ikTelemetry.stanceSlipMm,
+      walkingSlipMm: this.ikTelemetry.walkingSlipMm || 0,
       jointTorquesNm: this.ikTelemetry.jointTorquesNm,
     };
   }
