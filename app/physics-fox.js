@@ -279,12 +279,15 @@ function animate() {
 
         const pitch = -controller.grfController.pitchRad;
         const h = 0.38; // nominal height from ground origin to spine CoM
-        physContainer.rotation.x = pitch;
-        physContainer.position.set(
-          comX,
-          comY - h * Math.cos(pitch),
-          comZ - h * Math.sin(pitch)
-        );
+        const targetPosY = comY - h * Math.cos(pitch);
+        const targetPosZ = comZ - h * Math.sin(pitch);
+
+        // Smooth visual position and pitch (alpha = 18 * dt for responsive stance tracking with zero chatter)
+        const alpha = Math.min(1.0, 18.0 * dt);
+        physContainer.rotation.x += (pitch - physContainer.rotation.x) * alpha;
+        physContainer.position.x = comX;
+        physContainer.position.y += (targetPosY - physContainer.position.y) * alpha;
+        physContainer.position.z += (targetPosZ - physContainer.position.z) * alpha;
 
         // Ensure animal.object remains strict identity transform
         physFox.object.position.set(0, 0, 0);

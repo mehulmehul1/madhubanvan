@@ -113,25 +113,29 @@ export class DimensionlessGRFController {
     hindSplit = Math.max(0.10, Math.min(0.90, hindSplit));
     const foreSplit = 1.0 - hindSplit;
 
-    const frontTargetY = frontGroundY + nominalStandY;
+    const targetH = nominalStandY * Math.cos(effectivePitch);
+    const frontTargetY = frontGroundY + targetH;
     const frontComp = frontTargetY - tPos[1];
 
-    const hindTargetY = hindGroundY + nominalStandY;
+    const hindTargetY = hindGroundY + targetH;
     const hindComp = hindTargetY - pPos[1];
 
-    // Stance support forces: physical impedance decoupled from gravity weight distribution
+    // Contact & Impact detection: within 5 cm of ground
+    if (frontComp >= -0.05) this.hasImpacted = true;
+    if (hindComp >= -0.05) this.hasImpacted = true;
+
+    // Active stance reach: once impacted/grounded, accommodate slope clearance across wheelbase without chatter
+    const reachLimit = this.hasImpacted ? Math.max(0.08, nominalStandY * 0.25) : 0.05;
     let fForeY = 0;
     let fHindY = 0;
 
-    if (frontComp >= -0.05) {
-      this.hasImpacted = true;
+    if (frontComp >= -reachLimit) {
       const kF = frontComp > 0 ? this.kLand * 0.5 : this.kTotal * 0.5;
       const cF = frontComp > 0 ? this.cLand * 0.5 : this.cTotal * 0.5;
       fForeY = Math.max(0, foreSplit * (this.totalMassKg * GRAVITY) + kF * frontComp - cF * tVel[1]);
     }
 
-    if (hindComp >= -0.05) {
-      this.hasImpacted = true;
+    if (hindComp >= -reachLimit) {
       const kH = hindComp > 0 ? this.kLand * 0.5 : this.kTotal * 0.5;
       const cH = hindComp > 0 ? this.cLand * 0.5 : this.cTotal * 0.5;
       fHindY = Math.max(0, hindSplit * (this.totalMassKg * GRAVITY) + kH * hindComp - cH * pVel[1]);
@@ -193,9 +197,9 @@ export class DimensionlessGRFController {
     world.addForce(thoraxId, [fForeX, fForeY, fForeZ]);
     world.addTorque(thoraxId, [-torquePitch * 0.5, torqueYaw * 0.5, 0]);
 
-    // Apply forces to Pelvis (rear)
+    // Apply forces to Pelvis (rear) - consistent pitch restoring torque
     world.addForce(pelvisId, [fHindX, fHindY, fHindZ]);
-    world.addTorque(pelvisId, [torquePitch * 0.5, torqueYaw * 0.5, 0]);
+    world.addTorque(pelvisId, [-torquePitch * 0.5, torqueYaw * 0.5, 0]);
 
     // Track physical ground penetration (< 2.0 mm / 3.0 mm gate)
     const frontPawY = tPos[1] - nominalStandY;
@@ -381,10 +385,10 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
       pos2: waistPos,
       twist1: [0, Math.sin(-targetPitch), Math.cos(-targetPitch)],
       twist2: [0, Math.sin(-targetPitch), Math.cos(-targetPitch)],
-      normalHalfConeAngle: 0.25,
-      planeHalfConeAngle: 0.25,
-      twistMinAngle: -0.15,
-      twistMaxAngle: 0.15,
+      normalHalfConeAngle: 0.35,
+      planeHalfConeAngle: 0.35,
+      twistMinAngle: -0.20,
+      twistMaxAngle: 0.20,
     });
 
     if (this.gravityFree) {
