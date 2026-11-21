@@ -7,7 +7,7 @@
 // --gpu: D3D12 WebGPU flags, full Chromium (for the real WebGPU path).
 import fs from 'fs';
 import path from 'path';
-import { launchPage, mkdirp } from './lib/common.mjs';
+import { launchPage, mkdirp, findChrome } from './lib/common.mjs';
 
 const url = process.argv[2];
 const out = process.argv[3] || 'out/shot.png';
@@ -17,7 +17,7 @@ const W = +opt('w', 900), H = +opt('h', 620), timeout = +opt('timeout', 120) * 1
 
 if (!url) { console.error('usage: node tools/shot.mjs <url> <out.png> [--w N] [--h N] [--gpu]'); process.exit(2); }
 
-const CHROME = path.join(process.env.LOCALAPPDATA, 'ms-playwright', 'chromium-1194', 'chrome-win', 'chrome.exe');
+const CHROME = process.env.PROCEDURAL_ANIMALS_CHROME || findChrome();
 if (!fs.existsSync(CHROME)) { console.error('chromium not found at ' + CHROME); process.exit(2); }
 
 const GPU_ARGS = ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-angle=d3d11', '--ignore-gpu-blocklist', '--disable-gpu-sandbox', '--no-first-run'];

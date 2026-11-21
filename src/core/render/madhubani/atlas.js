@@ -61,7 +61,15 @@ function buildMips(data, w, h, layers) {
           const i10 = so + (y1 * sw + x0) * 4, i11 = so + (y1 * sw + x1) * 4;
           const o = doff + (y * dw + x) * 4;
           for (let c = 0; c < 4; c++) {
-            dst[o + c] = (src[i00 + c] + src[i01 + c] + src[i10 + c] + src[i11 + c] + 2) >> 2;
+            const avg = (src[i00 + c] + src[i01 + c] + src[i10 + c] + src[i11 + c] + 2) >> 2;
+            if (c === 0) {
+              // Ink outline channel: preserve thin stroke definition at distant mips so
+              // katchni/godna fine lines don't average into faint midtone grey
+              const mx = Math.max(src[i00], src[i01], src[i10], src[i11]);
+              dst[o + c] = Math.max(avg, (avg + mx * 2 + 1) >> 2);
+            } else {
+              dst[o + c] = avg;
+            }
           }
         }
       }

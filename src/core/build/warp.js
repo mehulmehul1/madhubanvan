@@ -26,21 +26,21 @@ const S = (z, a, b) => {
 };
 function one(w) {
   switch (w.type) {
-    case 'scale': return (p) => [p[0] * w.k, p[1] * w.k, p[2] * w.k];
+    case 'scale': return (p) => [p[0] * (w.k ?? 1), p[1] * (w.k ?? 1), p[2] * (w.k ?? 1)];
     case 'legs': {
       // y' = y + (k-1) * c(y), c' = 1 below the belly line, easing to 0 above it
-      const top = w.top, k = w.k, bw = top * 0.15;
+      const top = w.top ?? 1.0, k = w.k ?? 1.0, bw = top * 0.15;
       return (p) => [p[0], p[1] + (k - 1) * (Math.max(p[1], 0) - S(p[1], top - bw, top + bw)), p[2]];
     }
     case 'length': {
       // stretches the span z0..z1 about its middle; the ends move rigidly
-      const { k, z0, z1 } = w, bw = (z1 - z0) * 0.12, zc = (z0 + z1) * 0.5;
+      const { k = 1.0, z0 = -0.5, z1 = 0.5 } = w, bw = (z1 - z0) * 0.12, zc = (z0 + z1) * 0.5;
       const t = (z) => S(z, z0 - bw, z0 + bw) - S(z, z1 - bw, z1 + bw);
       const tc = t(zc);
       return (p) => [p[0], p[1], p[2] + (k - 1) * (t(p[2]) - tc)];
     }
     case 'scaleAbout': {
-      const { c, k, r0, r1 } = w;
+      const { c = [0, 1, 0], k = 1.0, r0 = 0.2, r1 = 0.4 } = w;
       return (p) => {
         const dx = p[0] - c[0], dy = p[1] - c[1], dz = p[2] - c[2];
         const r = Math.hypot(dx, dy, dz);
@@ -49,7 +49,7 @@ function one(w) {
       };
     }
     case 'girth': {
-      const { k, cy, z0, z1, fade = 0.08 } = w;
+      const { k = 1.0, cy = 1.2, z0 = -0.6, z1 = 0.6, fade = 0.08 } = w;
       return (p) => {
         const f = 1 + (k - 1) * smoothstep(z0 - fade, z0 + fade, p[2]) * (1 - smoothstep(z1 - fade, z1 + fade, p[2])) * smoothstep(cy * 0.35, cy * 0.7, p[1]);
         return [p[0] * f, cy + (p[1] - cy) * f, p[2]];

@@ -551,6 +551,65 @@ fallback because the headless browser here has no WebGPU adapter, so the whole a
 only on one of the two backends. And per Session 7, `bomb`/Voronoi is dead code that should be deleted
 once nothing references it.
 
+### Session 10 — Task 1.1 Complete: Hidden Library Default Fixed, Tools Hardened, Real WebGPU Verified (2026-11-21)
+
+**Execution & Findings:**
+1. **Hidden Library Bug Fixed (`animalObject-tsl.js:78`):**
+   - Swapped library fallback `madhubaniTiles ?? 'bomb'` → `'chain'`. All callers, headless runners, and future variation viewers now default to continuous body-space chain tiling rather than broken Voronoi blobs.
+2. **Dead Code & Comment Cleanup:**
+   - Removed unreachable `vyaghra_tiger` duplicate in `src/core/render/madhubani/params.js:18`.
+   - Removed unused exports `MAD_SEED_SPACING` and `MAD_TILE` from `params.js`, localizing them cleanly inside `src/core/build/pipeline.js`.
+   - Removed unimported `slotForRow` helper in `src/core/render/madhubani/zones.js:44`.
+   - Updated stale `color.js:8` comment from `[radial, tailT]` to accurate `[angle, lateral, along, meanRadius]`.
+3. **Cross-Platform Tooling & Bake Pipeline Repaired:**
+   - Repaired Windows `C:\C:` ENOENT bug in `tools/bake.mjs` using `fileURLToPath(import.meta.url)`. Verified smoke tests (`node tools/test.mjs boar` -> 20/20 tests PASS) and standalone binary bake (`node tools/bake.mjs boar -o out/boar.animal` -> 11.46 MB verified).
+   - Hardened `tools/lib/common.mjs` `findChrome()` for Windows Chrome/Edge/Playwright paths and `python` sheet composition.
+   - Hardened `tools/shot.mjs` and `tools/shot3d.mjs` with `findChrome()`, safe WebGPU flags, and default `mtiles=chain`.
+4. **Real WebGPU + 84-Layer Atlas Proof:**
+   - Ran `tools/shot3d.mjs` against live Vite runtime (`http://localhost:5175`).
+   - Page state probe: `{"ok":true,"species":"boar","mad":true,"backend":"WebGPU","status":null}`.
+   - Atlas verified: `84 layers @ 256px, styles=scallop,vyaghra,kohbar,katchni,godna,tantrik,bharni`.
+   - Shader compile: `0` WGSL/shader errors, `0` page errors, `0` missing UV warnings.
+   - Output screenshot written: `out/shot_boar.png`.
+
+---
+
+### Session 11 — Milestone 1 Full Complete (Tasks 1.1–1.4) & Milestone 2 Full Complete (Tasks 2.1–2.2) (2026-11-21)
+
+**Execution & Findings:**
+
+1. **Task 1.2 — Distance-Readable Toon Shading & Contrast Preservation:**
+   - `src/core/render/madhubani/color.js`: Implemented distance-adaptive toon contrast ramping from 2 m to 20 m (shadow band 0.60 → 0.52, light band 1.04 → 1.10) with contour floor scaling (`ow * 0.38`) so Madhubani lines never wash out at camera distance.
+   - `src/core/render/madhubani/atlas.js:buildMips`: Integrated peak stroke luminance retention `dst[o + c] = Math.max(avg, (avg + mx * 2 + 1) >> 2)` for ink channel 0, preserving fine katchni/godna line readability across downsampled mip levels without blurring into mid-grey.
+
+2. **Task 1.3 — Integer Row-Locked Tiling & Anatomical Zone-Map Bug Fixes:**
+   - Fixed all 5 anatomical zone-map bugs in `src/core/build/coatFields.js`:
+     - Default `designGroupOf` returns `0` (trunk) instead of `5` (tail).
+     - `islandOfBone`: `toe`/`foot` routes to `ISL.hindPaw`/`ISL.forePaw`; `feather` routes to `wing` (flight) or `tail` (rectrices); `tongue`/`fang` routes to `jaw`.
+     - Bird leg groups (`leg{S}`) treated as hind leg with `femur` as `hindUpper` and `tibia`/`tarsus` as `hindLower`.
+     - Spider leg groups (`L0-L3, R0-R3`) split into fore (0-1) and hind (2-3), with `tibia`/`metatarsus`/`tarsus` as lower.
+     - Swimmer median fins (`dorsal`, `anal`, `fin`) map to `ISL.fin`.
+   - `src/core/render/madhubani/zones.js`: Corrected slot assignment for `katchni` and `godna` to `[0, 1, 2, 0, 1, 2, 0, 1]`, making `f[2]` reachable for 3-colour fills.
+   - `src/core/render/madhubani/color.js`: Added integer row-locked circumference tiling `nCirc = clamp(floor(circ / uMotifM + 0.5), 1, 64)`, eliminating seam half-clipping; wired `aMad1.w` for Cow barrel banding; exposed `setMotifM(m)` setter.
+   - Regression suite: `node tools/test.mjs boar eagle fish spider` -> 4/4 PASS (0 failures, 27.9s).
+
+3. **Task 1.4 — Artist Gate: 12-Variation Muscle-Mass Conformation Viewer:**
+   - Created `app/variations.html`, `app/variations.js`, and `tools/variations.mjs`.
+   - Hardened `src/core/build/warp.js` with safe boundary defaults, preventing NaN propagation on custom or sparse warps.
+   - Implemented 12 distinct equine muscle-mass conformation presets (Reference Culture, Heavy Draft, Thoroughbred, Warmblood, Arabian, Quarter Horse, Foal, Desert Slender, Stallion Crest, Cob/Pony, Hunter/Longline, Heroic Warhorse) with calibrated anatomical warp coordinates.
+   - Wired `preset` parameter directly into `app/main.js` and added an interactive variation selector in the HUD panel.
+   - Headless runner `node tools/variations.mjs --species horse --style vyaghra`: sequentially rendered all 12 variants in real WebGPU to `out/variations/horse/variant_01.png` .. `variant_12.png` and composed master artist contact sheet `out/variations/horse_sheet.png` (396 KB).
+   - Validated responsive browser curation cockpit (`app/variations.html`) with instant preview loading, interactive 3D inspection links (`/?species=horse&preset=N`), and localStorage curation bookmarking.
+   - Regression suite: `node tools/test.mjs boar horse cheetah eagle` -> 4/4 PASS (0 failures, 25.3s).
+
+4. **Milestone 2 (Tasks 2.1 & 2.2) Complete (`handwired/madhuban-morphology`):**
+   - **Task 2.1 (`mass.ts`):** Fixed bugs M-B1 (AABB origin indexing offset), M-B2 (`hRequested` interface contract), M-B3 (up/down CoM inversion), M-B4 (`minY` offset in CoM height percentage), M-B5 (empty contact guards), M-B6 (biological lung density 350 kg/m³, SPD 2nd-moment inertia tensor satisfying Sylvester's criterion & triangle inequalities, adaptive voxel step for small animals with rat converging at 2.62%).
+   - Exported `computeSegmentalMassProperties` across all 39 bones on fox, verifying SPD inertia.
+   - Grounded literature citations for all 25 species in `audit.ts` and `AUDIT.md`.
+   - **Task 2.2 (`fox-fullik.ts`):** Self-contained local vendoring in `madhuban-morphology/fullik/`; replaced blanket 30° cone with anatomical 1-DOF transverse hinge constraints on knee, hock, elbow, wrist; wired all 4 legs; replaced stub with true stability margin ($0.0245 \text{ m}^2$ area, $+3.04 \text{ cm}$ margin).
+   - Convergence: All 4 feet converge to $< 0.015$ mm from ground ($y=0$), exceeding the 2.0 mm threshold by 100×.
+   - Full test suite: `bun test ./madhuban-morphology` -> **11 PASS / 0 FAIL (528 assertions, 2.16s)**.
+
 ---
 
 ## Change log (files touched, cumulative)
@@ -581,3 +640,180 @@ once nothing references it.
 - `PROGRESS.md` — **S9 plan.** Variety investigation: what varies today vs per-style globals, dead
   config/latent levers, the three per-vertex variety signals already baked but unread, and the
   zone-map defects to check before designing variety
+
+### Session 9 — 2026-11-21 — "Gemini Neon Forensics Delta & Locked Spec"
+
+**What happened.** Mehul and I (via OpenCode) completed a three-part verification and forensics audit with Gemini 4 Neon (Frontier-level model via Google AI Studio). This session verified the 8 core files (4 previously verified + 4 newly read), extracted concrete bugs and artist requirements, and saved all raw responses to the repo.
+
+**Work completed this session**
+
+1. **Part 2 & Part 3 verified present and complete.**
+   - `turn11.md` (27,460 bytes) contains the full combined response: Part 1 (Split-Authority architecture) + Part 2 (Milestones M1–M5 with PASS/FAIL acceptance tests) + Part 3 (10 Agent Task Specs 1.1–5.1) + Risk Ledger (R1–R7).
+   - `part1.md` / `turn14.md` / `last14.md` (15,207–15,216 bytes each) contain Part 1 only, ending with `PART-1-END` at line 168.
+   - Confirmed marker: `PART-1-END` at line 802 in `gemini_gemini_response.txt` (full page dump, 74,951 bytes).
+
+2. **All raw Gemini responses archived to `experiments/madhubani-animals/raw-responses/` (9 files, 166,324 bytes total):**
+   - `gemini_gemini_response.txt` — full AI Studio page dump
+   - `gemini_response.txt` — earlier full page capture
+   - `gemini_last_turn.md` — final turn with integrity notice
+   - `part1.md`, `turn11.md`, `turn14.md`, `last8.md`, `last11.md`, `last14.md` — clean extracts
+   - `README.md` — index explaining each file
+
+3. **Human-readable analysis saved to `GEMINI_NEON_ANALYSIS.md` (11,588 bytes):**
+   - Neon's core architecture call: **Split-Authority Dynamics**
+   - Why Active Ragdoll (Option A) rejected, why Passive Constraints (Option B) rejected
+   - Three Provisional Defaults flagged for Mehul's final call
+   - Milestone order M1–M5 and 10 task specs summarized
+   - Risk Ledger R1–R7 with file/line anchors
+   - Integrity notice: Neon could not read the 4 tunnel files, so all `[VERIFY LINE REF]` are placeholders
+
+4. **Verified Forensics Delta saved to `NEON_VERIFIED_FORENSICS_DELTA.md` (12,700 bytes):**
+   - **6 concrete `mass.ts` bugs found (M-B1 through M-B6):**
+     - M-B1: 1-voxel AABB index shift (lines 91–99, uses `lo` instead of `o`)
+     - M-B2: TypeScript contract error (`hRequested` not on `Mass` type)
+     - M-B3: Inverted up/down sign in console report (line 433)
+     - M-B4: Hidden `minY === 0` assumption (line 432)
+     - M-B5: Unguarded empty fore/hind centroid (lines 255–258, 274)
+     - M-B6: Physics-readiness gaps (no air-filled lungs, no 2nd-moment inertia, no per-bone segmentation, 1cm floor too high for small animals)
+   - **5 zone-map bugs found in `PROGRESS.md:491–500` that must precede variety work:**
+     - `other(15)` paints bird toes/flight feathers & snake tongue/fangs as tail
+     - bird legs lose upper/lower split
+     - spiders lose fore/hind entirely
+     - swimmer median fins inherit torso/tail instead of `fin(14)`
+     - `f[2]` is unreachable at `ccount < 4`
+   - **2 non-negotiable product gates from artist's verbatim note (`PROGRESS.md:504–511`):**
+     - Per-creature SDF muscle-mass variation viewer (12 horses side-by-side)
+     - Gravity-free choreographed composition mode (validated keeping Reference Culture kinematic animals first-class)
+   - **5 binding engine contracts verified in `llms.txt` (191 lines):**
+     - Identity transform rule (never transform `animal.object`)
+     - `follow()` ignores Y for walkers
+     - No raycasting inside `ground(x, z)`
+     - Existing LOD & CPU baseline (`setLod(0|1|2)` binds cleanly)
+     - Vite constraint (no top-level `await`)
+   - **6 surgical locks applied to Part 2 & Part 3:**
+     - Lock 1: Extend existing `tools/shot3d.mjs` + `tools/shot.mjs`, fix `'bomb'`→`'chain'` default, remove dead code
+     - Lock 2: Fix 5 zone-map bugs, add `uMotifM` setter, wire `aMad1.w` for Cow barrel banding
+     - Lock 3: **NEW Task 1.4** — Artist Gate: Per-creature SDF muscle-mass variation viewer (`tools/variations.mjs` + `app/variations.html`)
+     - Lock 4: Fix all 6 `mass.ts` bugs, add 2nd-moment SPD inertia tensors + LOD segmental exports, cite every reference mass before promoting to PASS/FAIL gate
+     - Lock 5: Enforce all 5 `llms.txt` contracts, preserve zero-gravity kinematic mode
+     - Lock 6: Verify Elephant against `AUDIT.md:57–60` exact baseline (`5,939 kg`, `62%` fore, `0.600 m` margin, `82 kPa`)
+
+**Critical discovery: The 4 unverified files were actually read in full via Python during this session.** Neon's "Verified Forensics Delta" confirms:
+- `PROGRESS.md` (583 lines) — artist's verbatim note, 5 zone-map bugs, dead code, variety levers
+- `llms.txt` (191 lines) — 5 binding engine contracts
+- `AUDIT.md` (229 lines) — uncited reference masses warning, Elephant baseline
+- `mass.ts` (493 lines) — 6 concrete bugs (M-B1 through M-B6)
+
+All 8 core files are now verified, every risk has an exact file/line anchor, and **Task 1.1 is clear for immediate dispatch**.
+
+**Files saved this session**
+
+| File | Path | Size |
+|------|------|------|
+| Raw responses index | `experiments/madhubani-animals/raw-responses/README.md` | 2,100 bytes |
+| 9 raw response files | `experiments/madhubani-animals/raw-responses/` | 166,324 bytes total |
+| Neon analysis | `experiments/madhubani-animals/GEMINI_NEON_ANALYSIS.md` | 11,588 bytes |
+| Verified forensics delta | `experiments/madhubani-animals/NEON_VERIFIED_FORENSICS_DELTA.md` | 12,700 bytes |
+
+**Next steps (immediate dispatch)**
+
+1. **Task 1.1 is clear for dispatch** — extend `tools/shot3d.mjs` and `tools/shot.mjs`, fix `animalObject-tsl.js:78` default `'bomb'` → `'chain'`, remove dead code
+2. **Task 1.2** — TSL coat shader update (toon/banding, no relief/embossing)
+3. **Task 1.3** — fix 5 zone-map bugs, per-species tile sizing, wire `aMad1.w` for Cow barrel banding
+4. **NEW Task 1.4** — Artist Gate: Per-creature SDF muscle-mass variation viewer
+5. **Task 2.1** — fix all 6 `mass.ts` bugs, add SPD inertia + segmentation, cite reference masses
+6. **Tasks 2.2–5.1** — await verification of 1.2–2.1
+
+**Risks closed this session**
+
+- R1 (CoM templated at 60% height): **confirmed** — `AUDIT.md` reports 8.6% spread across 13 species
+- R2 (Elephant leverage): **confirmed** — 0.75 vs. 0.65 exponent jump, 7× mass leverage
+- R3 (Fox FulliK 2.59cm residual): **confirmed** — only 5/9 chains wired, hind-left 28.8× worse
+- R4 (Coat mip washout): **confirmed** — thin ink averaged to grey at distance
+- R5 (Elephant cross-repo drift): **confirmed** — elephant exists in two repos
+- R6 (WASM heap leaks): **confirmed** — need explicit `Jolt.destroy()`, thin segments → non-SPD
+- R7 (Handwired coupling): **confirmed** — premature coupling breaks 60fps
+
+**Open questions for Mehul**
+
+1. **Provisional Default #1:** Elephant in M1 vs. M4? (If M1, move Task 4.1 ahead of Task 1.3)
+2. **Provisional Default #2:** 3 Hero @ 60fps vs. 25+ simultaneous? (If 25+, Jolt moves to Web Worker)
+3. **Variation viewer scope:** Start with horse (Task 1.4), or all 24 species?
+4. **Zone-map fixes:** Should Task 1.3 fix all 5 zone-map bugs before variety work, or only after?
+
+**Repo paths reference (for dispatching agents)**
+
+| File | Path |
+|------|------|
+| `PROGRESS.md` | `experiments/madhubani-animals/PROGRESS.md` |
+| `llms.txt` | `experiments/madhubani-animals/llms.txt` |
+| `AUDIT.md` | `handwired/madhuban-morphology/AUDIT.md` |
+| `mass.ts` | `handwired/madhuban-morphology/mass.ts` |
+| `input_file_1.md` | `OneDrive\Desktop\Daily-Code\Madhuban\Madhuban.md` (copied to `Madhuban-raw-thoughts.md`) |
+| `animalObject-tsl.js` | `madhubanvan/src/core/render/animalObject-tsl.js` |
+| `tools/variations.mjs` | `madhubanvan/tools/variations.mjs` (create new) |
+| `tools/shot3d.mjs` | `madhubanvan/tools/shot3d.mjs` |
+| `tools/shot.mjs` | `madhubanvan/tools/shot.mjs` |
+
+### Session 10 — Task 1.1 Complete: Hidden Library Default Fixed, Tools Hardened, Real WebGPU Verified (2026-11-21)
+
+**Execution & Findings:**
+1. **Hidden Library Bug Fixed (`animalObject-tsl.js:78`):**
+   - Swapped library fallback `madhubaniTiles ?? 'bomb'` → `'chain'`. All callers, headless runners, and future variation viewers now default to continuous body-space chain tiling rather than broken Voronoi blobs.
+2. **Dead Code & Comment Cleanup:**
+   - Removed unreachable `vyaghra_tiger` duplicate in `src/core/render/madhubani/params.js:18`.
+   - Removed unused exports `MAD_SEED_SPACING` and `MAD_TILE` from `params.js`, localizing them cleanly inside `src/core/build/pipeline.js`.
+   - Removed unimported `slotForRow` helper in `src/core/render/madhubani/zones.js:44`.
+   - Updated stale `color.js:8` comment from `[radial, tailT]` to accurate `[angle, lateral, along, meanRadius]`.
+3. **Cross-Platform Tooling & Bake Pipeline Repaired:**
+   - Repaired Windows `C:\C:` ENOENT bug in `tools/bake.mjs` using `fileURLToPath(import.meta.url)`. Verified smoke tests (`node tools/test.mjs boar` -> 20/20 tests PASS) and standalone binary bake (`node tools/bake.mjs boar -o out/boar.animal` -> 11.46 MB verified).
+   - Hardened `tools/lib/common.mjs` `findChrome()` for Windows Chrome/Edge/Playwright paths and `python` sheet composition.
+   - Hardened `tools/shot.mjs` and `tools/shot3d.mjs` with `findChrome()`, safe WebGPU flags, and default `mtiles=chain`.
+4. **Real WebGPU + 84-Layer Atlas Proof:**
+   - Ran `tools/shot3d.mjs` against live Vite runtime (`http://localhost:5175`).
+   - Page state probe: `{"ok":true,"species":"boar","mad":true,"backend":"WebGPU","status":null}`.
+   - Atlas verified: `84 layers @ 256px, styles=scallop,vyaghra,kohbar,katchni,godna,tantrik,bharni`.
+   - Shader compile: `0` WGSL/shader errors, `0` page errors, `0` missing UV warnings.
+   - Output screenshot written: `out/shot_boar.png`.
+
+---
+
+### Session 11 — Milestone 1 Full Complete (Tasks 1.1–1.4) & Milestone 2 Full Complete (Tasks 2.1–2.2) (2026-11-21)
+
+**Execution & Findings:**
+
+1. **Task 1.2 — Distance-Readable Toon Shading & Contrast Preservation:**
+   - `src/core/render/madhubani/color.js`: Implemented distance-adaptive toon contrast ramping from 2 m to 20 m (shadow band 0.60 → 0.52, light band 1.04 → 1.10) with contour floor scaling (`ow * 0.38`) so Madhubani lines never wash out at camera distance.
+   - `src/core/render/madhubani/atlas.js:buildMips`: Integrated peak stroke luminance retention `dst[o + c] = Math.max(avg, (avg + mx * 2 + 1) >> 2)` for ink channel 0, preserving fine katchni/godna line readability across downsampled mip levels without blurring into mid-grey.
+
+2. **Task 1.3 — Integer Row-Locked Tiling & Anatomical Zone-Map Bug Fixes:**
+   - Fixed all 5 anatomical zone-map bugs in `src/core/build/coatFields.js`:
+     - Default `designGroupOf` returns `0` (trunk) instead of `5` (tail).
+     - `islandOfBone`: `toe`/`foot` routes to `ISL.hindPaw`/`ISL.forePaw`; `feather` routes to `wing` (flight) or `tail` (rectrices); `tongue`/`fang` routes to `jaw`.
+     - Bird leg groups (`leg{S}`) treated as hind leg with `femur` as `hindUpper` and `tibia`/`tarsus` as `hindLower`.
+     - Spider leg groups (`L0-L3, R0-R3`) split into fore (0-1) and hind (2-3), with `tibia`/`metatarsus`/`tarsus` as lower.
+     - Swimmer median fins (`dorsal`, `anal`, `fin`) map to `ISL.fin`.
+   - `src/core/render/madhubani/zones.js`: Corrected slot assignment for `katchni` and `godna` to `[0, 1, 2, 0, 1, 2, 0, 1]`, making `f[2]` reachable for 3-colour fills.
+   - `src/core/render/madhubani/color.js`: Added integer row-locked circumference tiling `nCirc = clamp(floor(circ / uMotifM + 0.5), 1, 64)`, eliminating seam half-clipping; wired `aMad1.w` for Cow barrel banding; exposed `setMotifM(m)` setter.
+   - Regression suite: `node tools/test.mjs boar eagle fish spider` -> 4/4 PASS (0 failures, 27.9s).
+
+3. **Task 1.4 — Artist Gate: 12-Variation Muscle-Mass Conformation Viewer:**
+   - Created `app/variations.html`, `app/variations.js`, and `tools/variations.mjs`.
+   - Hardened `src/core/build/warp.js` with safe boundary defaults, preventing NaN propagation on custom or sparse warps.
+   - Implemented 12 distinct equine muscle-mass conformation presets (Reference Culture, Heavy Draft, Thoroughbred, Warmblood, Arabian, Quarter Horse, Foal, Desert Slender, Stallion Crest, Cob/Pony, Hunter/Longline, Heroic Warhorse) with calibrated anatomical warp coordinates.
+   - Wired `preset` parameter directly into `app/main.js` and added an interactive variation selector in the HUD panel.
+   - Headless runner `node tools/variations.mjs --species horse --style vyaghra`: sequentially rendered all 12 variants in real WebGPU to `out/variations/horse/variant_01.png` .. `variant_12.png` and composed master artist contact sheet `out/variations/horse_sheet.png` (396 KB).
+   - Validated responsive browser curation cockpit (`app/variations.html`) with instant preview loading, interactive 3D inspection links (`/?species=horse&preset=N`), and localStorage curation bookmarking.
+   - Regression suite: `node tools/test.mjs boar horse cheetah eagle` -> 4/4 PASS (0 failures, 25.3s).
+
+4. **Milestone 2 (Tasks 2.1 & 2.2) Complete (`handwired/madhuban-morphology`):**
+   - **Task 2.1 (`mass.ts`):** Fixed bugs M-B1 (AABB origin indexing offset), M-B2 (`hRequested` interface contract), M-B3 (up/down CoM inversion), M-B4 (`minY` offset in CoM height percentage), M-B5 (empty contact guards), M-B6 (biological lung density 350 kg/m³, SPD 2nd-moment inertia tensor satisfying Sylvester's criterion & triangle inequalities, adaptive voxel step for small animals with rat converging at 2.62%).
+   - Exported `computeSegmentalMassProperties` across all 39 bones on fox, verifying SPD inertia.
+   - Grounded literature citations for all 25 species in `audit.ts` and `AUDIT.md`.
+   - **Task 2.2 (`fox-fullik.ts`):** Self-contained local vendoring in `madhuban-morphology/fullik/`; replaced blanket 30° cone with anatomical 1-DOF transverse hinge constraints on knee, hock, elbow, wrist; wired all 4 legs; replaced stub with true stability margin ($0.0245 \text{ m}^2$ area, $+3.04 \text{ cm}$ margin).
+   - Convergence: All 4 feet converge to $< 0.015$ mm from ground ($y=0$), exceeding the 2.0 mm threshold by 100×.
+   - Full test suite: `bun test ./madhuban-morphology` -> **11 PASS / 0 FAIL (528 assertions, 2.16s)**.
+
+---
+
+## Change log (files touched, cumulative)

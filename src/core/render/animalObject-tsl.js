@@ -75,9 +75,10 @@ export function createAnimalObject(data, species = {}, opts = {}) {
     madhubaniStyle: opts.madhubaniStyle,
     madhubaniSeed: opts.madhubaniSeed ?? data.seed,
     madhubaniAtlas: opts.madhubaniAtlas,
-    tiles: opts.madhubaniTiles ?? 'bomb',
+    tiles: opts.madhubaniTiles ?? 'chain',
     madGrid: madTex,
   });
+  if (opts.madhubaniMotifM && mats.mad?.setMotifM) mats.mad.setMotifM(opts.madhubaniMotifM);
   const madMode = mats.style === 'madhubani';
 
   // painted eyes (bind-space centres + iris tint)

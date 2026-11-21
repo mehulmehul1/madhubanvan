@@ -5,7 +5,7 @@
 // time) picks its own tile and colour slot, colours cycle per tile row, and a bold ink seam is drawn
 // where zones meet. Multi-colour by design: 2-4 palette fills, varied per seed.
 //
-// Reads the build-time contract aMad1 = [island, designGroup, axisMode, spineT], aMad2 = [radial, tailT].
+// Reads the build-time contract aMad1 = [island, designGroup, axisMode, spineT], aMad2 = [angle, lateral, along, meanRadius].
 import * as THREE from 'three/webgpu';
 import {
   Fn, If, Loop, uniform, select, vec2, vec3, vec4, float, int, mix, smoothstep, clamp, abs, floor, fract,
@@ -94,6 +94,7 @@ export function createMadhubani(opts = {}) {
   }
   function setSeed(s) { uSeed.value = s >>> 0; }
   function setDebug(v) { uDbg.value.x = typeof v === 'number' ? v : (v ? 1 : 0); }
+  function setMotifM(m) { if (typeof m === 'number' && m > 0) uMotifM.value = m; }
   // the toon bands follow the scene's key light (direction toward the light, in the mesh's space)
   function setSun(v) { uSunDir.value.copy(v).normalize(); }
 
@@ -187,12 +188,14 @@ export function createMadhubani(opts = {}) {
       const am = mad1.z;
 
       // pattern space: `mad2.z` is arc length along the part's chain (rows wrap, uniform). Across,
-      // tubular parts use angle * 2*PI * the segment's MEAN radius (a smoothed, artifact-free
-      // approximation of arc length around — using each vertex's own radius smeared on an elliptical
-      // torso, and a mesh-accumulated unwrap was worse because ring detection doesn't match the mesh).
+      // tubular parts use angle * 2*PI * the segment's MEAN radius, integer-locked to circumference
+      // so scallop/scale rows never shear or half-clip across the dorsal/ventral seam.
       // Flat parts (fins / wings) tile across by the lateral offset `mad2.y`.
+      const circ = mad2.w.mul(6.2831853);
+      const nCirc = clamp(floor(circ.div(uMotifM).add(0.5)), float(1.0), float(64.0));
+      const pvLocked = mad2.x.mul(nCirc).mul(uMotifM);
       const pu = mad2.z;
-      const pv = select(am.lessThan(2.5), mad2.x.mul(6.2831853).mul(max(mad2.w, float(0.004))), mad2.y);
+      const pv = select(am.lessThan(2.5), pvLocked, mad2.y);
 
       // continuous wobble (no floor(): a stepped seed jumps as the pattern crosses tile borders)
       const wob = n2(vec2(pv.mul(6.0), pu.mul(6.0))).sub(0.5).mul(uP2.x);
@@ -202,6 +205,14 @@ export function createMadhubani(opts = {}) {
       // zone -> tile + colour slot
       const tileId = select(dg.lessThan(0.5), uZT.x, select(dg.lessThan(1.5), uZT.y, select(dg.lessThan(2.5), uZT.z, select(dg.lessThan(3.5), uZT.w, select(dg.lessThan(4.5), uZT2.x, select(dg.lessThan(5.5), uZT2.y, select(dg.lessThan(6.5), uZT2.z, uZT2.w)))))));
       const slot = select(dg.lessThan(0.5), uZS.x, select(dg.lessThan(1.5), uZS.y, select(dg.lessThan(2.5), uZS.z, select(dg.lessThan(3.5), uZS.w, select(dg.lessThan(4.5), uZS2.x, select(dg.lessThan(5.5), uZS2.y, select(dg.lessThan(6.5), uZS2.z, uZS2.w)))))));
+      
+      // Cow-style barrel banding on trunk: wire mad1.w (spineT) so bands run around the barrel
+      // while keeping the authentic vertical wrap seam
+      const spineT = mad1.w;
+      const barrelBand = floor(spineT.mul(14.0)).mod(2.0);
+      const rowBand = floor(vv.div(uMotifM)).mod(2.0);
+      const activeBand = select(dg.lessThan(0.5), barrelBand, rowBand);
+
       // ── Authored SVG motifs, painted in BODY SPACE ────────────────────────────────────────────
       // `uu` is arc length AROUND the part, `vv` is arc length ALONG it — both in METRES. That is the
       // whole point: a square motif stays square and uniform-scale everywhere, orientation runs
@@ -213,8 +224,7 @@ export function createMadhubani(opts = {}) {
         const m = texture(atlasTex, vec2(uu.div(uMotifM), vv.div(uMotifM)))
           .depth(int(tileId).add(uAtlasOffset));
         // colour bands step per motif row, as in the references where each row shifts tone
-        const band = floor(vv.div(uMotifM)).mod(2.0);
-        const iA = slot.add(band).mod(ccount);
+        const iA = slot.add(activeBand).mod(ccount);
         col = pick(slot.add(2.0).mod(ccount));                    // ground
         col = mix(col, pick(iA.add(1.0).mod(ccount)), m.b);        // fill B under fill A
         col = mix(col, pick(iA), m.g);                             // fill A
@@ -288,21 +298,25 @@ export function createMadhubani(opts = {}) {
     // graphic elements; the volume is read from the bands. No specular, no sheen, no crushed blacks.
     const N = normalize(nIn);
     const V = normalize(cameraPosition.sub(pIn));
+    const dist = length(cameraPosition.sub(pIn));
     const lam = dot(N, normalize(uSunDir));
     const aa = max(fwidth(lam), float(0.004));            // anti-alias the band edges
     const s1 = smoothstep(aa.negate(), aa, lam);          // terminator: shadow -> mid
-    const s2 = smoothstep(aa.negate(), aa, lam.sub(0.45)); // mid -> light
-    let band = mix(float(0.64), float(0.84), s1);
-    band = mix(band, float(1.03), s2);
-    col = col.mul(band);
+    const s2 = smoothstep(aa.negate(), aa, lam.sub(0.42)); // mid -> light
+    // Dynamic distance adaptation: crisp contrast bands at distance so volume reads clearly at 8m/20m
+    const distFactor = clamp(dist.sub(2.0).div(18.0), float(0.0), float(1.0));
+    const shadowVal = mix(float(0.60), float(0.52), distFactor);
+    const midVal = mix(float(0.84), float(0.82), distFactor);
+    const lightVal = mix(float(1.04), float(1.10), distFactor);
+    let bandLight = mix(shadowVal, midVal, s1);
+    bandLight = mix(bandLight, lightVal, s2);
+    col = col.mul(bandLight);
 
-    // ink contour: a THIN silhouette line only. A wide threshold (ow ~0.10) turned every steeply
-    // angled surface into a black band, and the paper rim into a white one — the "sheen" that
-    // killed the print when the animal moved. Keep it narrow.
+    // ink contour: silhouette line with distance-stable width
     const ndv = abs(dot(N, V));
-    const ow = uP.w.mul(0.28);
-    const o1 = float(1.0).sub(smoothstep(ow, ow.mul(1.7), ndv));
-    col = mix(col, uInk, clamp(o1, 0.0, 1.0).mul(0.9));
+    const ow = uP.w.mul(mix(float(0.28), float(0.38), distFactor));
+    const o1 = float(1.0).sub(smoothstep(ow, ow.mul(1.6), ndv));
+    col = mix(col, uInk, clamp(o1, 0.0, 1.0).mul(mix(float(0.9), float(1.0), distFactor)));
 
     if (mode === 'bomb') {
       const dbgId = hash(vec2(ns.id1, 3.7));
@@ -316,5 +330,5 @@ export function createMadhubani(opts = {}) {
     return col;
   });
 
-  return { uniforms: { uInk, uPaper, uBead, uSunDir, uP, uP2 }, color, setPalette, setStyle, setSeed, setDebug, setSun };
+  return { uniforms: { uInk, uPaper, uBead, uSunDir, uP, uP2, uMotifM }, color, setPalette, setStyle, setSeed, setDebug, setSun, setMotifM };
 }

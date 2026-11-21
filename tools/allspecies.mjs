@@ -4,13 +4,14 @@
 import fs from 'fs';
 import path from 'path';
 import { listSpecies } from '../src/registry.js';
+import { findChrome } from './lib/common.mjs';
 
 const opt = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const base = opt('base', 'http://localhost:5175');
 const quality = opt('quality', 'low');
 const styles = opt('styles', 'natural,madhubani').split(',');
 
-const CHROME = path.join(process.env.LOCALAPPDATA, 'ms-playwright', 'chromium-1194', 'chrome-win', 'chrome.exe');
+const CHROME = process.env.PROCEDURAL_ANIMALS_CHROME || findChrome();
 const outDir = path.resolve('out/allspecies');
 fs.mkdirSync(outDir, { recursive: true });
 

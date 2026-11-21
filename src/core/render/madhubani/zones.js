@@ -29,8 +29,8 @@ export const STYLE_ZONES = {
   scallop: { tiles: [ 0,   7,   1,   3,   5,  11,   4,   2], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 3 },
   vyaghra: { tiles: [ 0,   6,   1,  10,   7,  11,   4,   9], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 3 },
   kohbar:  { tiles: [ 0,   1,   3,   2,   6,  10,   4,   9], slots: [0, 2, 1, 3, 0, 2, 1, 3], colours: 4 },
-  katchni: { tiles: [ 0,   1,   2,   4,   7,   9,   5,  10], slots: [0, 1, 0, 1, 0, 1, 0, 1], colours: 2 },
-  godna:   { tiles: [ 8,   0,   9,   1,   6,  11,   7,  10], slots: [0, 1, 0, 1, 0, 1, 0, 1], colours: 2 },
+  katchni: { tiles: [ 0,   1,   2,   4,   7,   9,   5,  10], slots: [0, 1, 2, 0, 1, 2, 0, 1], colours: 2 },
+  godna:   { tiles: [ 8,   0,   9,   1,   6,  11,   7,  10], slots: [0, 1, 2, 0, 1, 2, 0, 1], colours: 2 },
   tantrik: { tiles: [ 4,   0,   1,   3,   2,   7,   8,  10], slots: [0, 1, 2, 3, 0, 1, 2, 3], colours: 4 },
   bharni:  { tiles: [ 0,   2,   3,  10,   6,   4,   7,   8], slots: [0, 2, 1, 3, 0, 2, 1, 3], colours: 4 },
 };
@@ -40,5 +40,3 @@ export const STYLE_ZONES = {
 // atlas carry all twelve. Until the atlas lands, tiles 4-11 exist as drawings only.
 export const TILES_PER_STYLE = 12;
 export const SDF_TILE_LIMIT = 4;
-
-export const slotForRow = (slot, row, count) => ((slot + row) % count + count) % count;

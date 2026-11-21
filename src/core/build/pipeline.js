@@ -15,7 +15,9 @@ import { measureSeams } from './seams.js';
 import { sharpenFinEdges } from './finEdges.js';
 import { computeCoatFields } from './coatFields.js';
 import { computeMadSeeds } from './seeds.js';
-import { MAD_SEED_SPACING, MAD_TILE } from '../render/madhubani/params.js';
+
+const MAD_SEED_SPACING = 0.070;
+const MAD_TILE = 0.95 * MAD_SEED_SPACING;
 
 export const FORMAT_VERSION = 3;
 

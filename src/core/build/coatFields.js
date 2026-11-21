@@ -33,7 +33,7 @@ export function designGroupOf(island) {
   if (island === ISL.tail) return 5;
   if (island === ISL.wing) return 6;
   if (island === ISL.fin) return 7;
-  return 5;
+  return 0; // default to trunk (0) rather than tail (5)
 }
 
 function islandOfBone(bone) {
@@ -42,21 +42,31 @@ function islandOfBone(bone) {
     case 'torso': return n === 'chest' ? ISL.chest : ISL.torso;
     case 'neck': return ISL.neck;
     case 'head': return ISL.head;
-    case 'jaw': case 'muzzle': return ISL.jaw;
+    case 'jaw': case 'muzzle': case 'tongue': case 'fang': return ISL.jaw;
     case 'ear': case 'horn': return ISL.ear;
     case 'tail': return ISL.tail;
     case 'wing': return ISL.wing;
     case 'fin': return ISL.fin;
-    case 'foot': return g[0] === 'H' ? ISL.hindPaw : ISL.forePaw;
+    case 'feather': return (g.startsWith('wing') || /^(pri|sec)/.test(n)) ? ISL.wing : ISL.tail;
+    case 'foot': case 'toe': return (g[0] === 'H' || g.startsWith('leg')) ? ISL.hindPaw : ISL.forePaw;
     case 'limb': {
-      const fore = g[0] !== 'H';
-      // upper vs lower from the bone name (falls back to upper for unknown plans)
-      const lower = /^(radius|metacarpus|ulna|tibia|metatarsus|fibula|antebrachium)/.test(n) ||
-        /(radius|tibia|metatarsus|metacarpus|lower)/.test(n);
+      // Quadruped, bird, spider, and general limb routing
+      // Bird leg groups are 'leg{S}', quadruped hind legs are 'H{S}', spider legs 2 & 3 are hind
+      const isSpiderHind = /^[LR][23]/.test(g);
+      const isHind = g[0] === 'H' || g.startsWith('leg') || isSpiderHind;
+      const fore = !isHind;
+      // upper vs lower from bone name
+      const lower = /^(radius|metacarpus|ulna|tibia|tarsus|metatarsus|fibula|antebrachium)/.test(n) ||
+        /(radius|tibia|tarsus|metatarsus|metacarpus|lower)/.test(n);
       if (fore) return lower ? ISL.foreLower : ISL.foreUpper;
       return lower ? ISL.hindLower : ISL.hindUpper;
     }
-    default: return ISL.other;
+    default: {
+      if (n.startsWith('dorsal') || n.startsWith('anal') || n.startsWith('pectoral') || n.startsWith('pelvic') || n.includes('fin')) {
+        return ISL.fin;
+      }
+      return ISL.other;
+    }
   }
 }
 

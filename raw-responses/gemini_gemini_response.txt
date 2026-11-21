@@ -1,0 +1,1214 @@
+Send prompt (Ctrl + Enter)
+Append to prompt (Alt + Enter)
+Skip to main content
+EXPLORE
+chat_spark
+Playground
+history
+History
+BUILD
+add
+New app
+widgets
+My apps
+gallery_thumbnail
+Gallery
+MANAGE
+speed
+Dashboard
+chevron_right
+developer_guide
+Documentation
+chevron_right
+redeem
+Claim free API credits
+$10 monthly from the Google Developer Program.
+notifications
+settings
+search
+key
+mehulsrivastava447@gmail.com
+PRO
+menu
+Developing the Madhuban Project
+edit
+
+tokens
+
+design_services
+add
+more_vert
+edit
+more_vert
+more_vert
+more_vert
+edit
+more_vert
+more_vert
+more_vert
+edit
+more_vert
+more_vert
+Model 6:46 PM
+Thoughts
+
+Expand to view model thoughts
+
+chevron_right
+edit
+more_vert
+0. Tool Boundary & Integrity Notice (Before Anything Else)
+
+Under Constraint #5 (nothing is claimed until measured; unmeasured is labelled unmeasured), I must state one mechanical fact upfront rather than fake line numbers:
+
+When I attempted to fetch https://raw.githubusercontent.com/mehulmehul1/madhubanvan/main/PROGRESS.md and https://raw.githubusercontent.com/mehulmehul1/handwired/main/madhuban-morphology/AUDIT.md, my browse runtime rejected both with:
+
+Not able to browse the provided URL. Please only use the URL in user prompt or search results.
+
+Because your prompt gave a <path> template rather than literal per-file URLs—and because commits 722aa0d and 6b221ae are minutes old and not yet in Google's search index—my tool cannot expand <path> into raw file reads, and the repo root URLs returned an access block on this call.
+
+I will not fabricate a single line number, quote the artist’s verbatim note from memory, or invent findings inside unread files. Instead, you asked me not to wait: below is the complete, execution-ready architecture, milestone plan, full agent task specs (M1–M5), and file-mapped risk ledger incorporating every new repo fact you just revealed (722aa0d & 6b221ae), structured so local coding agents with direct filesystem access to both repos can execute immediately, with explicit [VERIFY LINE REF] checkpoints where exact line citations must be logged by the agent (or by me if you paste verbatim raw URLs/files later).
+
+1. Architecture Read & Definitive Call on IK-vs-Dynamics
+Definitive Call: Split-Authority Physics (Reject Both Naive Extremes)
+
+Between (A) Active Jolt Ragdoll + Post-Physics FulliK and (B) Pure Kinematic Gait + Passive Physics Constraints, the right architecture for Madhuban is Split-Authority Dynamics:
+
+Dynamic Core in Jolt (Mass & Momentum Authority):
+
+Pelvis + thorax (1 or 2 rigid bodies joined by a spring-damped SwingTwistConstraint) built with mass, local CoM, and 3×3 inertia tensors exported directly from handwired/madhuban-morphology/mass.ts.
+
+Governed by real gravity, linear/angular inertia, terrain collisions, landing compression, and turn banking.
+
+Kept upright by computed Ground-Reaction Force (GRF) wrenches applied at the planted foot contact points inside the real support polygon—using dimensionless spring-damper equations parameterized purely by measured mass 
+𝑚
+m
+, leg length 
+𝐿
+L
+, gravity 
+𝑔
+g
+, and damping ratio 
+𝜁
+ζ
+ (zero species-specific force constants).
+
+Locomotor Limbs in FulliK (Precision & Silhouette Authority):
+
+A velocity-proportional foothold planner (Raibert / capture-point stepping) computes swing/stance ground targets from the Jolt core’s actual velocity and terrain raycasts.
+
+FulliK solves leg, spine/neck, and jaw chains from the Jolt core’s physics-driven hip/shoulder sockets to those ground targets within anatomical joint limits.
+
+Foot shapes in Jolt are kinematic contact/query bodies (pushing world props and reporting contact without fighting the solver).
+
+Joint loads required for PLAN-form-follows-function.md are measured cleanly via exact inverse dynamics (
+𝜏
+=
+𝐽
+𝑇
+𝐹
+GRF
+τ=J
+T
+F
+GRF
+	​
+
+) from the solved IK Jacobian and stance GRFs—no unstable active ragdoll motors needed.
+
+Dynamic Motorized Chains in Jolt (Secondary Motion Authority):
+
+Non-balance appendages—elephant trunk, tails, ears—run as true dynamic Jolt SwingTwistConstraint chains with soft motors (DriveToPoseUsingMotors). They swing, droop, track authored poses, and collide with terrain naturally.
+
+Full dynamic ragdoll exists only as a discrete state transition (hit/stumble/death) or as the offline stability stress-test in madhuban-morphology.
+
+Defense Against the Two Alternatives
+
+Why not Active Ragdoll + Post-IK (Option A): Jolt’s joint motors act in local joint space—they provide no world-space balance torque on the root. Standing a 35-joint active ragdoll across 6 body plans and ~1,000× mass scaling (fox to elephant) requires a closed-loop ZMP/torque balance controller per body plan, high substeps (120–240 Hz), and causes physics–IK fighting (FulliK overriding dynamic feet injects energy or visually pops, wrecking the Madhubani silhouette). Worse, AUDIT.md already proved 6 of 7 fore/hind load splits are currently off—an active ragdoll will faithfully tip over on broken mass properties.
+
+Why not Passive Constraints Only (Option B): Kinematic curves with height/limit clamps fake inertia; a 4,000 kg elephant and a 6 kg fox accelerate and land identically unless hand-authored, and the engine gains no physical measurement layer to evaluate derived creatures (the eagle wing test, griffin, Ganesha/Hanuman/Garuda).
+
+Repo-Mapped Layer Diagram (Conventions: m, s, rad, Y-up, heading 0 = +Z)
+code
+Text
+download
+content_copy
+expand_less
+OFFLINE / MORPHOLOGY REPO (handwired/madhuban-morphology/)
+  mass.ts + converge.ts + species.ts + elephant.ts
+    └──> Exports deterministic MassSpec JSON / TS contract:
+         { totalMassKg, com, supportPolygon, restingForeHindSplit,
+           segments: [{ boneName, massKg, localCom, inertia3x3 }] }
+
+ENGINE BUILD-TIME (madhubanvan — Seed -> Deterministic Animal; Worker or .animal bake)
+  [1. Sculpt]       src/species/<name>/sculpt.js  (SDF)
+        │
+        ▼
+  [2. Mass Bind]    MassSpec (measured from SDF via shared mass.ts rules; < 1% integral error)
+        │
+        ▼
+  [3. Surface/Coat] surface-nets mesh + body-space (around, along) m + designGroup + landmarks
+        │           + per-species tile sizing & row-locked scales (src/core/render/madhubani/)
+        ▼
+  [4. Rig & Proxy]  src/core/rig/quadruped.js + src/species/<name>/rig.js
+                    skeleton, anatomical limits, DQ skin weights, Jolt capsule/convex specs
+
+RUNTIME FIXED-STEP LOOP (madhubanvan — Main Thread, dt = 1/60 s, Zero Per-Frame Allocs)
+  [5. Gait/Targets] desired vel/heading + Jolt core state -> stance/swing + Jolt terrain raycasts
+        │
+        ▼
+  [6. Jolt Core]    single-threaded deterministic JoltPhysics.js WASM (src/core/physics/)
+                    apply pluggable wrench list (Legged GRF now; Aero/Hydro later)
+                    step core bodies + dynamic motorized chains (trunk/tail/ears)
+        │
+        ▼
+  [7. FulliK Pose]  read Jolt core sockets -> solve bilateral limb/neck/jaw chains -> write bones
+                    emit telemetry: foot error (mm), stance slip (mm), joint torques (N·m)
+        │
+        ▼
+  [8. Skin & Coat]  DQ skin -> src/core/render/madhubani/ TSL shader (WebGPU primary, WebGL2 fallback)
+Runtime Sizing & Physics LOD (Governed by Provisional Default #2)
+
+Target: 1–3 Hero physics animals @ 60 fps in a tab, dropping to 10–15 at reduced physics LOD.
+
+Main-thread synchronous Jolt WASM (no Physics Web Worker): 3 Hero × ~10 bodies + 12 LOD1 × 1 body ≈ 42 dynamic bodies. Running synchronously on the main thread eliminates 1-frame Worker latency, avoids COOP/COEP header constraints, and guarantees trivial fixed-step determinism.
+
+Hard CPU budget (measured, never assumed): ≤ 3.0 ms/frame total for all physics + IK across 3 Hero + 12 LOD1 (≤ 0.7 ms/hero, ≤ 0.07 ms/LOD1).
+
+3-Tier Physics LOD (paired to the 5 mesh quality tiers ~120k → ~6k):
+
+LOD 0 (Hero, max 3, enter < 12 m / exit > 16 m): 2-body dynamic core + GRF wrenches + full bilateral FulliK + Jolt dynamic secondary chains + kinematic foot colliders.
+
+LOD 1 (Mid/Herd, #4–#15, 12–35 m): 1-body dynamic core + vertical/pitch spring + 4-iter FulliK (or analytic 2-bone legs) + JS spring secondary motion (zero Jolt constraints).
+
+LOD 2 (Crowd, > 15 or ~6k crowd tier): Reference-culture kinematic gait + heightfield snap (~0.1 ms/animal, zero Jolt bodies).
+
+Provisional Defaults Impact Ledger (Flagged for Mehul’s Final Call)
+
+Default #1 (Serial: Art Gate first, then Measurement/Physics): Blocks all Jolt integration until Milestone 1 signs off on coat distance-readability and scale-locked tiling across WebGPU and WebGL2. Override effect: M1 (Art) and M2 (Ruler + Fox IK) have disjoint file scopes (src/core/render/madhubani/ vs. src/species/fox/fox-fullik.ts + handwired/madhuban-morphology/) and can run in parallel if Mehul prefers.
+
+New Dependency Catch (src/species/elephant/ has no index.js yet): You flagged that src/species/elephant/ currently has rig.js and sculpt.js only. Therefore, M1 (Art Gate) cannot use the Elephant as a rendered benchmark unless we either (a) verify M1 tile sizing across the smallest-to-largest existing reference species (e.g., fox/mouse → largest upstream quadruped like horse/bear/rhino) and finish src/species/elephant/index.js at the start of M4, OR (b) add src/species/elephant/index.js into M1. My call: keep M1 unblocked by benchmarking small-to-large existing reference species in M1, and schedule src/species/elephant/index.js (plus cross-repo parity check against handwired/madhuban-morphology/elephant.ts) as Task 4.1. Flag this to Mehul if he wants Elephant rendered in M1 instead.
+
+Default #2 (1–3 Hero @ 60 fps, 10–15 at reduced Physics LOD): Locks Jolt to main-thread single-threaded WASM and mandates the 3-tier Physics LOD contract. Override effect: If Mehul later targets 25+ simultaneous full-physics animals, Jolt must move into a Web Worker with double-buffered transform snapshots.
+
+2. Milestone Order & Verifiable Acceptance Tests
+#	Milestone	Primary Repo / Scope	Verifiable Acceptance Test (PASS / FAIL)
+M1	Art Gate First: Coat Distance Readability, Per-Species Tiling & Visual Harness (Provisional Default #1)	madhubanvan (src/core/render/madhubani/, app/patterns.html, PROGRESS.md, MOTIFS.md)	Deterministic capture harness renders 4 benchmark species spanning small→large reference bodies at 2 m, 8 m, 20 m in both WebGPU and WebGL2 with 0 shader/console warnings; 0-pixel diff across repeated seeded runs; toon bands & primary silhouette contrast remain readable at 20 m (verified via luminance-band contrast metric + sign-off against the artist’s verbatim note in PROGRESS.md); motif aspect ratio within [0.9, 1.1], zero row-seam clipping on row-locked scales; hero frame time regression < +1.0 ms.
+M2	True Ruler, Bilateral Fox FulliK Closure & Telemetry Runner	handwired/madhuban-morphology/ + madhubanvan/src/species/fox/	mass.ts segmental export matches whole-SDF volume/mass within < 1.0%, all inertia tensors are symmetric positive-definite, and `AUDIT.md
+error
+Model isn't available right now. Please wait a minute and try again.
+edit
+more_vert
+more_vert
+Model 6:54 PM
+Thoughts
+
+Expand to view model thoughts
+
+chevron_right
+edit
+more_vert
+0. Tool Access & Integrity Notice
+
+Before presenting the breakdown, one mandatory truth under Constraint #5 (nothing is claimed until measured; unmeasured is labelled unmeasured):
+
+I invoked my browse and search tools on https://github.com/mehulmehul1/madhubanvan and https://github.com/mehulmehul1/handwired. Both returned an access error from the browse proxy, and Google search returned zero indexed pages for both newly pushed commits (722aa0d and 6b221ae). My browse tool also rejects template-derived raw URLs (raw.githubusercontent.com/...) unless each file URL appears verbatim or is indexed in search.
+
+Therefore, I have NOT read the source lines inside those files yet. I will not fabricate line numbers, invent quotes from the artist’s verbatim note in PROGRESS.md, or pretend to have audited code I could not fetch.
+
+Because you asked me not to wait, below is the complete, execution-ready orchestration plan anchored to every repo path, measurement, and contract you provided. Every task includes mandatory read-first files and [VERIFY LINE REF] audit gates so a local coding agent with repo checkout can execute immediately without fabricating anything.
+
+1. Architecture Read & Call on IK-vs-Dynamics
+Definitive Call: Split-Authority Dynamics
+
+Between (A) Active Jolt Ragdoll + Post-Physics FulliK and (B) Pure Kinematic Gait + Passive Physics Constraints, the right architecture for Madhuban is Split-Authority Dynamics — dividing every animal into three explicit physical authorities:
+
+Dynamic Core in Jolt (Mass, Momentum & Balance Authority):
+
+Pelvis + thorax (1 or 2 dynamic rigid bodies linked by a spring-damped SwingTwistConstraint) parameterized directly from handwired/madhuban-morphology/mass.ts (mass, local CoM, positive-definite 3×3 inertia tensor).
+
+Subject to real gravity, inertia, terrain collision, landing compression, and turn banking.
+
+Supported upright by computed Ground-Reaction Force (GRF) wrenches applied at planted foot contacts inside the support polygon, using dimensionless spring-damper equations derived strictly from measured mass 
+𝑚
+m
+, leg length 
+𝐿
+L
+, gravity 
+𝑔
+g
+, and target damping ratio 
+𝜁
+ζ
+ (zero species-specific force constants).
+
+Locomotor Limbs in FulliK (Foot Precision & Madhubani Silhouette Authority):
+
+A velocity-proportional foothold planner (Raibert / capture-point stepping) computes swing/stance ground targets from the Jolt core’s actual velocity and Jolt terrain raycasts.
+
+FulliK solves bilateral leg, spine/neck, and jaw chains from the Jolt core’s physics-driven hip/shoulder sockets to ground targets inside anatomical joint limits.
+
+Foot bodies in Jolt are kinematic contact/query shapes (pushing world props and reporting contact without fighting the solver).
+
+Joint loads needed by PLAN-form-follows-function.md are computed analytically via inverse dynamics (
+𝜏
+=
+𝐽
+𝑇
+𝐹
+GRF
+τ=J
+T
+F
+GRF
+	​
+
+) from the solved limb Jacobian and stance GRFs — exact joint torques without active-ragdoll instability.
+
+Dynamic Motorized Chains in Jolt (Secondary Motion Authority):
+
+Non-balance appendages — elephant trunk, tails, ears — run as true dynamic Jolt SwingTwistConstraint chains with soft motors (DriveToPoseUsingMotors). They swing, droop, track authored poses, and collide cleanly with terrain.
+
+Full dynamic ragdoll exists only as a discrete failure/hit/death state or an offline stability stress-test harness in madhuban-morphology — never as the primary locomotion driver.
+
+Defense Against the Two Alternatives
+
+Why reject Active Ragdoll + Post-IK (Option A): Jolt joint motors operate in local joint space and provide no world-space balance torque on the root. Standing a 35-joint active ragdoll across 6 body plans and ~1,000× mass scaling (fox to elephant) requires a full closed-loop balance/ZMP controller per body plan, 120–240 Hz substeps to survive high mass ratios (torso-to-paw), and causes physics–IK fighting (post-step FulliK overrides contact impulses, creating foot jitter or energy injection that ruins the Madhubani silhouette). Worse, AUDIT.md already proved 6 of 7 fore/hind load splits are currently off — an active ragdoll will faithfully faceplant on uncalibrated mass properties.
+
+Why reject Passive Constraints Only (Option B): Kinematic curves with gravity/limit clamps fake inertia; a 4,000 kg elephant and a 6 kg fox accelerate, bank, and absorb landings identically unless hand-authored. It also provides no physical force/torque layer to evaluate derived creatures (eagle wing test, griffin, Ganesha/Hanuman/Garuda).
+
+Repo-Mapped Layer Diagram (m, s, rad, Y-up, heading 0 = +Z)
+code
+Text
+download
+content_copy
+expand_less
+OFFLINE MORPHOLOGY (handwired/madhuban-morphology/)
+  mass.ts + converge.ts + species.ts + elephant.ts
+    └──> MassSpec contract: { totalMassKg, com, supportPolygon, restingForeHindSplit,
+                              segments: [{ boneName, massKg, localCom, inertia3x3 }] }
+
+BUILD-TIME (madhubanvan — Deterministic per Seed; Web Worker or .animal bake)
+  [1. Sculpt]       src/species/<name>/sculpt.js (SDF)
+        │
+        ▼
+  [2. Mass Bind]    MassSpec derived from SDF (shared math with mass.ts; < 1% integral error)
+        │
+        ▼
+  [3. Mesh & Coat]  surface-nets mesh + body-space (around, along) m + 8 designGroups + 4 landmarks
+        │           + per-species tile sizing & row-locked scales (src/core/render/madhubani/)
+        ▼
+  [4. Rig & Proxy]  src/core/rig/quadruped.js + src/species/<name>/rig.js
+                    skeleton, anatomical limits, DQ skin weights, Jolt capsule/convex descriptors
+
+RUNTIME FIXED-STEP LOOP (madhubanvan — Main Thread, dt = 1/60 s, Zero Per-Frame Allocs)
+  [5. Gait/Targets] desired vel/heading + Jolt core state -> stance/swing phase + Jolt raycasts
+        │
+        ▼
+  [6. Jolt Core]    single-threaded deterministic JoltPhysics.js WASM (src/core/physics/)
+                    consumes pluggable WrenchList (Legged GRF now; Aero/Hydro/Slither later)
+                    steps core bodies + dynamic motorized chains (trunk/tail/ears)
+        │
+        ▼
+  [7. FulliK Pose]  reads Jolt core sockets -> bilateral limb/neck/jaw solve -> writes bones
+                    logs telemetry: foot error (mm), stance slip (mm), joint torques (N·m)
+        │
+        ▼
+  [8. Skin & Coat]  DQ skin -> src/core/render/madhubani/ TSL shader (WebGPU primary, WebGL2 fallback)
+3-Tier Physics LOD & Main-Thread Execution (Provisional Default #2)
+
+With a target of 1–3 Hero physics animals @ 60 fps, dropping to 10–15 at reduced Physics LOD:
+
+Run Jolt synchronously on the main thread (single-threaded deterministic WASM build). 3 Hero (~10 bodies each) + 12 LOD1 (1 body each) ≈ 42 dynamic bodies — well below the threshold that justifies Web Worker complexity, 1-frame interpolation lag, or COOP/COEP headers.
+
+Hard CPU budget (to be measured): ≤ 3.0 ms/frame total for physics + IK across 3 Hero + 12 LOD1 (≤ 0.7 ms/hero, ≤ 0.07 ms/LOD1), reserving ≥ 13.5 ms for WebGPU/WebGL2 TSL rendering and DQ skinning at 60 fps.
+
+LOD Tiers (paired with mesh quality tiers hero ~120k → crowd ~6k):
+
+Physics LOD 0 (Hero, max 3, enter < 12 m / exit > 16 m hysteresis): 2-body dynamic core + GRF wrenches + bilateral FulliK + Jolt dynamic secondary chains + kinematic foot colliders.
+
+Physics LOD 1 (Mid/Herd, #4–#15, 12–35 m): 1-body dynamic core + vertical/pitch spring + 4-iter FulliK (or analytic 2-bone legs) + cheap JS damped-spring secondary motion (zero Jolt constraints).
+
+Physics LOD 2 (Crowd, > 15 or ~6k crowd tier): Reference-culture kinematic gait + heightfield snap (~0.1 ms/animal, zero Jolt bodies).
+
+Provisional Defaults Impact Ledger (Flagged for Mehul’s Final Call)
+Provisional Default	Concrete Effect on This Plan	Impact If Mehul Overrides
+Default #1: Serial execution — Art Gate first, then Measurement/Physics	M1 is strictly Art Gate + minimal 3-distance visual capture fixture. Zero Jolt code lands until coat distance-readability and scale-locked tiling pass on WebGPU & WebGL2.	M1 (src/core/render/madhubani/) and M2 (fox-fullik.ts + madhuban-morphology/) touch disjoint files and can execute in parallel with zero merge conflict.
+Default #1 + Elephant WIP (rig.js & sculpt.js only, no index.js)	Because Elephant isn't wired into the renderer yet, M1 benchmarks scale-locked tiling across small→large existing reference species, and completing src/species/elephant/index.js is scheduled at the start of M4.	If Mehul wants Elephant inside M1’s visual gate, move Task 4.1 (elephant/index.js) ahead of Task 1.3.
+Default #2: 1–3 Hero @ 60 fps, 10–15 at reduced Physics LOD	Locks Jolt to main-thread synchronous single-threaded WASM and introduces the 3-tier Physics LOD contract + hysteresis handoff.	If Mehul raises the target to 25+ simultaneous full-physics animals, Jolt must move into a Web Worker with double-buffered transform snapshots.
+2. Milestone Order & Verifiable Acceptance Tests
+#	Milestone	Scope	Verifiable Acceptance Test (PASS / FAIL)
+M1	Art Gate First: Distance-Readable Toon/Banding, Scale-Locked Tiling & Visual Harness (Default #1)	madhubanvan: src/core/render/madhubani/, app/patterns.html, PROGRESS.md, MOTIFS.md	Deterministic capture runner renders 4 reference species (small→large) at 2 m, 8 m, 20 m in both WebGPU and WebGL2 with 0 console/shader errors and 0-pixel diff across repeated seeded runs; toon bands & primary silhouette contrast remain readable at 20 m (measured via band-luminance contrast metric + sign-off against the artist’s verbatim note in PROGRESS.md, with no relief/embossing); motif aspect ratio within [0.9, 1.1], zero row-seam clipping; hero frame-time delta < +1.0 ms.
+M2	True Ruler, Bilateral Fox FulliK Closure & Telemetry Runner	handwired/madhuban-morphology/ + madhubanvan/src/species/fox/	mass.ts segmental export sums within < 1.0% of whole-SDF mass on Fox and Elephant, with all inertia tensors symmetric positive-definite (
+𝐼
+𝑥
++
+𝐼
+𝑦
+≥
+𝐼
+𝑧
+I
+x
+	​
+
++I
+y
+	​
+
+≥I
+z
+	​
+
+); AUDIT.md sensitivity report separates density/ruler error from SDF sculpt error and quantifies Elephant leverage on the 0.75 vs. 0.65 exponent; fox-fullik.ts solves all 4 feet to < 2.0 mm (fixing the 2.59 cm hind-left residual) across 100 flat/sloped/uneven poses, with left/right mirror symmetry < 1e-4 rad.
+M3	Fox Split-Authority Physics Vertical Slice (vs. Reference Culture)	madhubanvan: src/core/physics/, Fox rig/gait, side-by-side harness	Determinism: 2 fresh runs over 600 fixed steps (10 s) match core pose to < 1e-6 m / < 1e-6 rad. Physics truth: Standing fore/hind GRF split matches mass.ts static prediction within < 3.0%; 15° uphill measurably shifts load rearward; 0.30 m drop settles in ≤ 0.6 s with < 2.0 mm ground penetration. Foot quality: Stance foot slip < 3.0 mm; IK error < 2.0 mm. Budget: ≤ 0.7 ms/frame per hero fox; 0 WASM heap growth across 50 create/destroy cycles. Art parity: Zero coat tearing or silhouette collapse vs. Reference Fox at 2m/8m/20m.
+M4	Elephant Completion, Scale Proof & 3-Hero + 12-LOD1 Stress Benchmark	madhubanvan: src/species/elephant/, Physics LOD 0/1/2	src/species/elephant/index.js renders with cross-repo geometry/mass parity against handwired/madhuban-morphology/elephant.ts (< 2% volume delta); zero per-species physics gain overrides in code; Fox (~6 kg) and Elephant (~4,000 kg) both stand, walk, turn, and survive 0.25 × hipHeight drops on the exact same dimensionless controller; Elephant walk duty factor > 0.60 with lower stride frequency (Froude scaling logged); Jolt trunk chain droops smoothly, tracks curl target within < 5° mean error, and stays < 3 mm above ground; 3 Hero + 12 LOD1 scene sustains ≥ 60 fps (≤ 3.0 ms/frame physics+IK) with < 5 mm LOD transition pop.
+M5	Morphology Verification Gate (Bridge to PLAN-form-follows-function.md)	handwired/madhuban-morphology/ + headless Bun/Jolt runner	Headless "Drop, Stand & Load" evaluator runs all 25 bodies in < 30 s total, outputting JSON { staticMarginMm, dynamicSettleMm, foreHindGrfSplit, peakJointTorquesNm, collapsed }; synthetic unstable test body (CoM outside footprint by 10 cm) deterministically reports collapsed: true; pluggable AeroForceGenerator wrench hook balances 
+𝐿
+=
+𝑚
+𝑔
+L=mg
+ within < 1.0% on an analytical benchmark — unlocking the Eagle Wing acceptance test and Griffin derivation.
+3. Execution-Ready Agent Task Specs
+
+Each spec is self-contained for an executing agent with local checkout of both repos.
+
+Milestone 1 — Art Gate First
+Task 1.1: Deterministic Multi-Distance Visual Capture Fixture
+
+Repo: madhubanvan
+
+Read First: README.md, llms.txt, PROGRESS.md (all 8 sessions), app/patterns.html
+
+Deliverable: tools/visual-gate.ts (plus minimal browser runner page) accepting (species, seed, qualityTier, coatStyle, palette, backend: 'webgpu' | 'webgl2'), posing the animal in bind + mid-stride, capturing deterministic PNGs at 2 m, 8 m, 20 m (3/4 front-side, fixed lighting), and emitting JSON with backend tag, shader warning count, median frame ms over 120 frames, and luminance-band contrast stats.
+
+Constraints: Seed-deterministic; zero runtime dependencies added to engine bundle.
+
+Acceptance Test: Two consecutive runs for (fox, seed=42) produce 0 pixel diff on both WebGPU and WebGL2, and log frame timing cleanly.
+
+Task 1.2: Distance-Readable Madhubani Toon/Banded Shading (TSL)
+
+Repo: madhubanvan
+
+Read First (Mandatory): PROGRESS.md (artist’s verbatim note is the binding spec), MOTIFS.md, AUTHORING.md, all files in src/core/render/madhubani/, handwired/madhubani-probe/probe.ts
+
+Deliverable: Update TSL coat shader(s) in src/core/render/madhubani/ (and mip builder if mip averaging is washing out dark katchni/godna ink into mid-grey at distance) so discrete pigment/toon bands and silhouette contours read clearly at 8 m and 20 m.
+
+Constraints: No relief/embossing (explicitly rejected); WebGPU/TSL primary, WebGL2 fallback must compile and match visually; app/patterns.html remains intact.
+
+Acceptance Test: Task 1.1 captures at 2 m / 8 m / 20 m across 4 species × both backends show 0 shader errors, improved measured 20 m band-contrast ratio vs. commit 722aa0d baseline, < +1.0 ms hero frame-time delta, and pass visual review against the artist’s verbatim note.
+
+Task 1.3: Per-Species Tile Sizing & Row-Locked Scales
+
+Repo: madhubanvan
+
+Read First: MOTIFS.md, AUTHORING.md, src/core/render/madhubani/, PROGRESS.md
+
+Deliverable: Replace global body-space (around, along) tiling with deterministic per-species tile sizing (scaled from local girth/length so motif density reads consistently from small to large animals) and integer row-locking around circumference so scallop/scale rows never shear or half-clip across the dorsal/ventral seam.
+
+Constraints: Preserve the 8 designGroup anatomy zones and 4 spare landmark motifs per style; motif aspect ratio stays within [0.9, 1.1].
+
+Acceptance Test: Task 1.1 captures at 2 m and 8 m on smallest and largest existing reference quadrupeds (plus one bird/fish) show zero seam-row half-clipping, aspect ratio within ±10%, and intact shoulder/back/snout landmarks.
+
+Milestone 2 — True Ruler & Bilateral Fox FulliK
+Task 2.1: Ruler Sensitivity Audit & Segmental Inertia Export
+
+Repo: handwired (madhuban-morphology/)
+
+Read First: AUDIT.md, PLAN-form-follows-function.md, PORT-REPORT.md, mass.ts, audit.ts, converge.ts, masses.ts, species.ts, elephant.ts, out/converge.txt, out/audit.json
+
+Deliverable:
+
+Add a sensitivity script quantifying (a) uniform density vs. biological segmental density (air-filled thorax/lungs vs. muscle/bone) on the 6-of-7 fore/hind load-split discrepancy, and (b) leave-one-out allometric regression (with vs. without Elephant) to test whether the 0.75 vs. 0.65 shift is a single-point leverage artifact.
+
+Export computeSegmentalMassProperties(sdf, rigSpec) from mass.ts producing { totalMassKg, com, supportPolygon, restingForeHindSplit, segments: [{ boneName, massKg, localCom, inertia3x3 }] } in m, kg, Y-up, +Z forward, with a minimum-mass/radius floor so thin segments (ears/tail tip) never yield degenerate inertia tensors.
+
+Acceptance Test: bun test confirms: (1) sum(segments.massKg) matches whole-SDF mass within < 1.0% on Fox and Elephant; (2) every inertia3x3 is symmetric positive-definite with triangle inequality 
+𝐼
+𝑥
++
+𝐼
+𝑦
+≥
+𝐼
+𝑧
+I
+x
+	​
+
++I
+y
+	​
+
+≥I
+z
+	​
+
+ satisfied; (3) voxel convergence bound from converge.ts is recorded in output JSON.
+
+Task 2.2: Diagnose & Fix Fox FulliK (2.59 cm Hind-Left Residual + Full Bilateral Chains)
+
+Repo: madhubanvan (src/species/fox/, src/core/rig/quadruped.js)
+
+Read First: src/species/fox/fox-fullik.ts, src/species/fox/rig.js, src/core/rig/quadruped.js
+
+Deliverable:
+
+Log exact root cause of the 2.59 cm hind-left residual (checking: reverse-bend hock cone-limit lock, ankle vs. paw-pad end-effector offset, spine→pelvis→hind-leg solve order, or geometric reach deficit).
+
+Fix the root cause and wire the complete bilateral Fox rig (all 4 legs, spine, neck, tail root, both ears, jaw).
+
+Add headless Bun telemetry script outputting JSON { perFootErrorMm, maxReachDeficitMm, mirrorAngleDiffRad } over 100 deterministic ground-target poses (flat, 15° slope, asymmetric step).
+
+Acceptance Test: All 4 feet converge to < 2.0 mm across all reachable poses in the 100-pose suite (any unreachable pose proves residual ≈ targetDist - maxReach within < 0.5 mm); left/right mirror test passes within < 1e-4 rad.
+
+Milestone 3 — Fox Split-Authority Physics Vertical Slice
+Task 3.1: Single-Threaded Deterministic JoltPhysics.js WASM Wrapper
+
+Repo: madhubanvan (src/core/physics/jolt-world.ts)
+
+Read First: llms.txt, package.json
+
+Deliverable: Main-thread wrapper over single-threaded deterministic JoltPhysics.js WASM with fixed-timestep accumulator (dt = 1/60 s), pre-allocated scratch Vec3/RVec3/Quat pool (zero per-step allocations), explicit dispose() lifecycle tracking live WASM allocations, terrain heightfield/box/ramp collider builder, raycast API, and pluggable WrenchGenerator interface.
+
+Acceptance Test: Unit test creates and destroys a 20-body scene 50 times with 0 net live wrapper handles and stable WASM heap; 600-step drop test reproduces identical final positions (< 1e-6 m) across two fresh world initializations.
+
+Task 3.2: Fox Centroidal Core, Dimensionless GRF Controller & Dynamic Secondary Chains
+
+Repo: madhubanvan (src/core/physics/legged-controller.ts, src/species/fox/)
+
+Read First: Task 2.1 MassSpec, Task 2.2 fox-fullik.ts, src/species/fox/rig.js
+
+Deliverable:
+
+Build Fox Jolt dynamic core (pelvis + thorax linked by spring-damped SwingTwistConstraint) directly from MassSpec.
+
+Implement dimensionless stance GRF controller (
+𝑘
+=
+𝑚
+𝜔
+0
+2
+k=mω
+0
+2
+	​
+
+, 
+𝑐
+=
+2
+𝜁
+𝑘
+𝑚
+c=2ζ
+km
+	​
+
+ with 
+𝜔
+0
+ω
+0
+	​
+
+ derived from 
+𝑔
+/
+𝐿
+g/L
+) distributing support forces across planted feet inside the support polygon, paired with Raibert/capture-point foothold placement and FulliK limb solves.
+
+Attach Fox tail and ears as Jolt dynamic motorized SwingTwistConstraint chains; compute inverse-dynamics joint torques 
+𝜏
+=
+𝐽
+𝑇
+𝐹
+GRF
+τ=J
+T
+F
+GRF
+	​
+
+.
+
+Build side-by-side comparison scene: Reference Fox vs. Physics Fox on flat ground, 15° ramp, and 0.30 m drop.
+
+Acceptance Test: All M3 criteria in Section 2 pass (determinism < 1e-6 m, standing fore/hind GRF split within < 3.0% of mass.ts, 0.30 m drop settles ≤ 0.6 s with < 2.0 mm penetration, stance foot slip < 3.0 mm, IK error < 2.0 mm, step time ≤ 0.7 ms/frame, visual coat parity verified via Task 1.1).
+
+Milestone 4 — Elephant Completion, Scale Proof & Physics LOD
+Task 4.1: Complete src/species/elephant/index.js & Cross-Repo Parity Check
+
+Repo: madhubanvan + handwired/madhuban-morphology/elephant.ts
+
+Read First: src/species/elephant/rig.js, src/species/elephant/sculpt.js, handwired/madhuban-morphology/elephant.ts, handwired/madhuban-morphology/out/port-elephant.json, AUTHORING.md
+
+Deliverable: Wire src/species/elephant/index.js matching the llms.txt species contract (all 5 quality tiers + Madhubani coat + scale-locked tiling from Task 1.3), and run a parity test comparing volume/CoM against handwired/madhuban-morphology/elephant.ts.
+
+Acceptance Test: Elephant builds cleanly in browser & Worker across hero→crowd tiers, passes Task 1.1 visual gate at 2m/8m/20m on WebGPU & WebGL2, and matches elephant.ts total volume within < 2.0%.
+
+Task 4.2: Elephant Scale Proof, Dynamic Jolt Trunk & 3-Tier Physics LOD
+
+Repo: madhubanvan (src/core/physics/, src/species/elephant/)
+
+Deliverable:
+
+Run Elephant on the exact same legged-controller.ts from Task 3.2 (zero species-specific force constants).
+
+Wire the Elephant trunk chain as a Jolt dynamic motorized SwingTwistConstraint chain with ground collision and target pose tracking (rest sway + curl/reach).
+
+Implement Physics LOD 0 / LOD 1 / LOD 2 manager with distance hysteresis (12 m / 16 m, 35 m / 40 m) and velocity/phase continuity.
+
+Build 15-animal stress scene (3 Hero [Fox, Elephant, 3rd species] + 12 LOD1).
+
+Acceptance Test: All M4 criteria in Section 2 pass (zero per-species gain overrides, Elephant walk duty factor > 0.60, trunk curl error < 5° & ground clearance < 3 mm penetration, ≥ 60 fps with ≤ 3.0 ms/frame physics+IK, < 5 mm LOD transition pop).
+
+Milestone 5 — Morphology Verification Gate
+Task 5.1: Headless "Drop, Stand & Load" Evaluator + Pluggable Aero Wrench Hook
+
+Repo: handwired/madhuban-morphology/ (consuming src/core/physics/ via shared TS module)
+
+Read First: PLAN-form-follows-function.md, AUDIT.md, audit.ts
+
+Deliverable: Headless Bun CLI running any SDF + rig through 3 s Jolt settle + push perturbation -> JSON report (staticMarginMm, dynamicSettleMm, foreHindGrfSplit, peakJointTorquesNm, collapsed); plus minimal AeroForceGenerator implementing the same WrenchGenerator interface.
+
+Acceptance Test: All 25 current bodies evaluated in < 30 s; synthetic unstable body (CoM shifted 10 cm outside footprint) reports collapsed: true; AeroForceGenerator balances 
+𝐿
+=
+𝑚
+𝑔
+L=mg
+ within < 1.0% on an analytical wing-strip benchmark.
+
+4. Risk Ledger (Mapped to Files & Measured Data)
+
+Because of the browse-tool block noted in Section 0, exact line numbers are marked [VERIFY LINE REF] for the first local agent pass — zero fabricated line numbers.
+
+#	Risk	Target Files	Evidence Already Observed / Mechanism	Mitigation & Gate
+R1	Confounded CoM & Load-Split Error (Ruler vs. Sculpt)	handwired/madhuban-morphology/AUDIT.md, mass.ts, audit.ts, converge.ts [VERIFY LINE REF]	AUDIT.md reports CoM templated at 60.0% height (8.6% spread) across 13 species and fore/hind load split disagreeing with force-plate refs in 6 of 7 animals. Uniform voxel density treats air-filled lungs/thorax as solid muscle (~1,000 kg/m³), biasing CoM forward — which could mask or mimic SDF sculpt error.	Task 2.1 runs biological segmental-density sensitivity before wiring Jolt so we never hack physics springs to cover a density bug.
+R2	Elephant Leverage Artifact in Allometry	handwired/madhuban-morphology/AUDIT.md, audit.ts, elephant.ts [VERIFY LINE REF]	Allometric exponent jumps by 0.10 (0.75 with elephant vs. 0.65 without). One ~4,000 kg point 2–3 orders of magnitude beyond 24 smaller bodies exerts massive OLS leverage; 0.75 may be a 1-point illusion rather than a scaling law across the 24 bodies.	Task 2.1 computes leave-one-out residuals / Cook’s distance and checks whether elephant.ts obeys a different sculpt scaling law than the upstream 24.
+R3	29× Fox FulliK Residual & Incomplete Bilateral Wiring	madhubanvan/src/species/fox/fox-fullik.ts, rig.js, src/core/rig/quadruped.js [VERIFY LINE REF]	Front-left hits 0.90 mm, hind-left stalls at 2.59 cm (28.8× worse), and only spine, front-left, hind-left, ear, jaw are wired (right limbs & tail absent). Classic FABRIK causes: reverse-bend canid hock locking under ball-joint cone limits, ankle-vs-paw-pad end-effector offset (~2.5 cm), stale pelvis root order after spine solve, or geometric reach deficit.	Task 2.2 instruments and resolves exact root cause to < 2.0 mm bilaterally before any Jolt integration.
+R4	Madhubani Mip Washout & High-Bend Coat Distortion	madhubanvan/src/core/render/madhubani/, MOTIFS.md, PROGRESS.md [VERIFY LINE REF]	Thin black ink (katchni/godna) averaged with bright pigment across standard mip levels collapses to muddy grey at distance — likely a root cause of why toon/banded shading fails at distance. Under real Jolt drops and trunk curls, sharper bends will also stress DQ skinning and body-space (around, along) metres.	Tasks 1.2 & 1.3 gate 2m/8m/20m contrast and row-locked scale integrity on WebGPU + WebGL2 before M3.
+R5	Cross-Repo Elephant Drift (madhubanvan vs. handwired)	madhubanvan/src/species/elephant/{rig.js,sculpt.js} vs. handwired/madhuban-morphology/elephant.ts, out/port-elephant.json [VERIFY LINE REF]	Elephant exists in two repos (elephant.ts in handwired, WIP rig.js/sculpt.js without index.js in madhubanvan). Divergent SDF dimensions or bone lengths will silently invalidate mass.ts mass/inertia bindings when plugged into Jolt.	Task 4.1 enforces an automated < 2% volume/CoM parity test between the two Elephant definitions.
+R6	JoltPhysics.js WASM Heap Leaks & Degenerate Inertia Assertions	madhubanvan/src/core/physics/ (new) + handwired/madhuban-morphology/mass.ts [VERIFY LINE REF]	Emscripten bindings require explicit Jolt.destroy() — a single new Jolt.Vec3() inside a 60 Hz step leaks tab memory rapidly. Thin SDF segments (ears, tail tips) can also produce non-positive-definite inertia tensors that trigger Jolt assertions or constraint explosions.	Task 3.1 mandates zero per-step allocations + 50-cycle leak test; Task 2.1 enforces SPD + 
+𝐼
+𝑥
++
+𝐼
+𝑦
+≥
+𝐼
+𝑧
+I
+x
+	​
+
++I
+y
+	​
+
+≥I
+z
+	​
+
+ + minimum mass/radius floor on every exported segment.
+R7	Premature handwired Circuit Coupling & Approximation Drift	handwired/madhuban-morphology/PORT-REPORT.md, port.ts [VERIFY LINE REF]	Porting SDFs into handwired ReGLU/matmul circuits introduces numerical deviation bounds (tracked in PORT-REPORT.md) and extra compute. Pulling handwired into live Three.js/Jolt runtime would break 60 fps and add approximation error prematurely.	Strictly quarantine handwired to offline madhuban-morphology/ optimization until PLAN-form-follows-function.md’s final phase genuinely needs differentiable gradients.
+How to Get Exact Line-Level Audits From Me Immediately (Optional)
+
+Local agents can begin Task 1.1 and Task 1.2 immediately using the specs above. If you want me to audit the actual lines of PROGRESS.md (especially the artist’s verbatim note), fox-fullik.ts, AUDIT.md, mass.ts, and src/core/render/madhubani/ directly, just paste the verbatim raw URLs (not a <path> template) or paste the file contents into your next message, and I will replace every [VERIFY LINE REF] with exact line citations and lock Task 1.2’s shader parameters against the artist’s exact words.
+
+edit
+more_vert
+more_vert
+Model 7:03 PM
+Thoughts
+
+Expand to view model thoughts
+
+chevron_right
+more_vert
+Part 1 — Verification Manifest, IK-vs-Dynamics Architecture Call & Risk Ledger
+0. Verification Manifest (What Was Actually Read)
+
+VERIFIED (read directly via URL context):
+
+madhubanvan/README.md[1]
+
+madhubanvan/src/species/fox/fox-fullik.ts (all 130 lines + symbol extents)[2]
+
+handwired/madhuban-morphology/PLAN-form-follows-function.md (Section 0 through Phase 6)[3]
+
+handwired/madhuban-morphology/README.md (through The scaffold is not the animal)[4]
+
+UNVERIFIED (blocked by browse proxy on this turn — zero line numbers or quotes fabricated):
+5. madhubanvan/PROGRESS.md (artist’s verbatim note and sessions 6–8 remain unread directly)
+6. madhubanvan/llms.txt
+7. handwired/madhuban-morphology/AUDIT.md (key numbers cross-verified only where summarized in PLAN-form-follows-function.md[3])
+8. handwired/madhuban-morphology/mass.ts
+
+1. Architecture Read & Call on IK-versus-Dynamics
+Definitive Call: Split-Authority Dynamics (Reject Both Naive Extremes)
+
+The boundary between JoltPhysics and FulliK should be neither a full dynamic ragdoll with post-physics IK clamping nor pure kinematic animation with passive constraints. Divide every physics-enabled animal into three authorities:
+
+Dynamic Core in Jolt (Mass, Momentum & Balance Authority):
+
+Pelvis + thorax (1 or 2 dynamic rigid bodies linked by a spring-damped SwingTwistConstraint) driven by real mass, local CoM, and positive-definite 3×3 inertia tensors from madhuban-morphology/mass.ts.
+
+Kept upright by computed Ground-Reaction Force (GRF) wrenches applied at planted foot contacts inside the support polygon, using dimensionless spring-damper equations derived solely from measured mass 
+𝑚
+m
+, leg length 
+𝐿
+L
+, gravity 
+𝑔
+g
+, and target damping ratio 
+𝜁
+ζ
+ (zero species-specific force constants).
+
+Pluggable Wrench Interface: The Jolt core consumes (worldPoint, worldForce) wrenches from a pluggable generator—Legged GRF for quadrupeds today, swapping cleanly to Quasi-Steady Blade-Element Aero (matching PLAN-form-follows-function.md Phase 1 item 5[3]) for the eagle wing acceptance test and Griffin/Garuda later.
+
+Locomotor Limbs in FulliK (Precision, Foot Contact & Madhubani Silhouette Authority):
+
+A velocity-proportional foothold planner (Raibert / capture-point stepping) computes swing/stance ground targets from the Jolt core’s real velocity and Jolt terrain raycasts.
+
+FulliK solves bilateral limb, spine/neck, and jaw chains from the Jolt core’s physics-driven hip/shoulder sockets onto terrain targets using anatomical hinge constraints for elbows/stifles/hocks and calibrated cones for ball joints (not blanket 30° cones).
+
+Foot bodies in Jolt act as kinematic contact/query shapes (pushing props and reporting contact without fighting the solver).
+
+Joint stress and bone-loading metrics required by PLAN-form-follows-function.md Phase 1 item 2[3] are computed via exact inverse dynamics (
+𝜏
+=
+𝐽
+𝑇
+𝐹
+GRF
+τ=J
+T
+F
+GRF
+	​
+
+) from the solved IK Jacobian and stance GRFs.
+
+Dynamic Motorized Chains in Jolt (Secondary Motion Authority):
+
+Non-balance appendages — elephant trunk, tails, ears — run as true dynamic Jolt SwingTwistConstraint chains with soft motors (DriveToPoseUsingMotors). They droop, sway, track authored targets, and collide with terrain naturally.
+
+Full dynamic ragdoll is reserved strictly for discrete state transitions (hit/stumble/death) or an offline morphology collapse test — never primary locomotion.
+
+Why This Beats Both Alternatives
+
+Against Active Ragdoll + Post-IK: Jolt’s DriveToPoseUsingMotors acts in local joint space and provides no world-space root balance torque. Standing a 35-joint dynamic animal across 6 body plans and a ~1,000× mass span (fox to elephant) requires per-body-plan closed-loop balance controllers and 120–240 Hz substeps, and post-physics FulliK foot clamping fights Jolt’s contact solver—causing silhouette jitter that directly violates Art first. Furthermore, PLAN-form-follows-function.md confirms the fore/hind load split is currently wrong in 6 of 7 force-plate-referenced animals[3]; a free active ragdoll on uncalibrated mass distribution will simply pitch onto its nose or sit back on its haunches.
+
+Against Passive Constraints Only: Kinematic gaits with height/limit clamping fake inertia and scale; an elephant and a fox land and turn identically unless hand-authored, and the engine gains no real force/dynamics layer to validate derived morphologies.
+
+Clean Integration Seam Verified in madhubanvan/README.md
+
+madhubanvan/README.md (Quickstart snippet) confirms the engine already exposes animal.follow(body.position, body.velocity) ("or follow your physics body, every frame"), animal.move({ speed, heading }), and animal.on('footstep', ...)[1]. This lets the 24 hand-authored Reference Culture animals stay completely untouched while Split-Authority physics animals plug into the same external steering contract and render side-by-side.
+
+Layer Diagram (m, s, rad, Y-up, heading 0 = +Z)
+code
+Text
+download
+content_copy
+expand_less
+OFFLINE / MORPHOLOGY (handwired/madhuban-morphology/)
+  mass.ts + converge.ts + species.ts + elephant.ts
+    └──> MassSpec { totalMassKg, com, supportPolygon, uncertaintyBound,
+                    segments: [{ boneName, massKg, localCom, inertia3x3 }] }
+
+BUILD-TIME (madhubanvan — Seed -> Deterministic Animal; Web Worker or .animal bake)
+  [1. Sculpt (SDF)] -> [2. Mass Bind] -> [3. Surface-Nets + Body-Space (around, along) Coat]
+                    -> [4. Rig + Anatomical Limits + DQ Skin + Jolt Core/Chain Descriptors]
+
+RUNTIME FIXED-STEP LOOP (madhubanvan — Main Thread, dt = 1/60 s, Zero Per-Frame Allocs)
+  [5. Gait & Footholds]  desired vel/heading + Jolt core state -> stance/swing + Jolt raycasts
+           │
+           ▼
+  [6. Jolt Core Step]    single-threaded deterministic JoltPhysics.js WASM
+                         apply pluggable WrenchList -> step core + dynamic chains (trunk/tail/ears)
+           │
+           ▼
+  [7. FulliK & Torque]   read Jolt core sockets -> solve bilateral limbs/neck/jaw -> log error & tau
+           │
+           ▼
+  [8. Skin & TSL Coat]   DQ skin -> Madhubani role-mask array + toon/banding (WebGPU / WebGL2)
+How the Two Provisional Defaults Shape This Architecture (Flagged for Mehul)
+
+Provisional Default #1 (Serial: Art Gate first, then Measurement/Physics): Delays all Jolt WASM integration until Madhubani distance-readability and per-species tile sizing / row-locked scales are signed off across WebGPU and WebGL2. (Override impact: Art Gate and Ruler/Fox-IK touch disjoint files and can run in parallel if Mehul prefers.)
+
+Provisional Default #2 (1–3 Hero physics @ 60 fps, dropping to 10–15 at reduced Physics LOD): Locks Jolt to main-thread synchronous single-threaded WASM (~42 dynamic bodies total for 3 Hero + 12 LOD1, zero Worker latency, no COOP/COEP headers) with a 3-tier Physics LOD:
+
+LOD 0 (Hero, max 3, < 12 m enter / > 16 m exit): 2-body core + GRF wrenches + full bilateral FulliK + Jolt secondary chains.
+
+LOD 1 (Mid/Herd, #4–#15, 12–35 m): 1-body core + vertical/pitch spring + 4-iter FulliK/analytic legs + JS spring secondary motion (zero Jolt constraints).
+
+LOD 2 (Crowd, > 15 or ~6k crowd tier): Reference-culture kinematic gait + terrain snap.
+(Override impact: 25+ simultaneous full-physics animals would require moving Jolt into a Web Worker with double-buffered transforms.)
+
+2. Risk Ledger (Verified & Unverified File/Symbol References)
+ID	Risk	File / Symbol / Lines	Status	Technical Evidence & Required Mitigation
+R1	Blanket 30° ball-cone clamp causes the 2.59 cm hind-left IK failure	madhubanvan/src/species/fox/fox-fullik.ts: b.setBallJointConstraintDegs(30) (line 55), chainDefs HL (femurL, tibiaL, metatarsusL, hpawL, line 36), bind-pose comment (line 64)[2]	VERIFIED	Line 64 states htoeL in bind pose is only ~0.0085 m (8.5 mm) off y = 0, yet solving produces a 25.9 mm residual — pulling the foot 3× farther from the ground. A digitigrade hind leg has acute stifle/hock bend angles > 30°; clamping every bone to a 30° isotropic cone forbids the natural stance itself. Fix: replace blanket ball cones with anatomical local hinges on elbows/stifles/hocks and species-calibrated cones on shoulders/hips.
+R2	Disconnected chains, reversed spine, missing bilateral limbs, and external path import	madhubanvan/src/species/fox/fox-fullik.ts: external import '../../../../../fullik-repo/src/FIK.js' (line 7); chainDefs (lines 33–39); foxRig() called per bone (line 47); targets skip loop (lines 79–81)[2]	VERIFIED	(a) Line 7 imports FulliK from 5 directories outside the repo—broken on any other machine/Vite build. (b) Five standalone Chain3Ds are never joined in an IKSolver/Structure3D; spine (line 34) runs backwards (head → pelvis); spine, earL, jaw are skipped (lines 79–81); FR, HR, earR, and tail are absent. (c) Line 66 claims a forward offset for FL, but line 68 applies none. Fix: vendor/depend on FulliK cleanly, connect chains to a pelvis root, and wire full bilateral chains.
+R3	Static stability check in fox-fullik.ts is a broken stub, not a measurement	madhubanvan/src/species/fox/fox-fullik.ts: approxMargin() (lines 103–116)[2]	VERIFIED	Despite logging STANDS (approx margin > 0), approxMargin() reads bind-pose J.hipL and J.htoeL (lines 105–106 — hip + toe on one side, not both hind feet), ignores the solved IK pose, discards footAvgX, footAvgZ, and spineMidZ (lines 108, 109, 112), and returns hardcoded 0.02 or -0.01 (line 115). Fix: delete stub; replace with real support-polygon margin computed from solved 4-foot ground contacts and mass.ts CoM.
+R4	Unresolved 6-of-7 fore/hind load-split error & 60.0% templated CoM	handwired/madhuban-morphology/PLAN-form-follows-function.md (Phase 1: What the audit already settled)[3]; AUDIT.md & mass.ts	PARTIALLY VERIFIED (PLAN verified; AUDIT.md & mass.ts unread)	PLAN confirms 6 of 7 force-plate-referenced animals disagree on fore/hind load split, CoM is templated at 60.0% height (8.6% spread across 13 species), and the cause (mass placement vs. foot placement) is unresolved[3]. Piping uncalibrated mass/foot geometry straight into Jolt will produce nose-heavy or tail-heavy dynamics. Fix: separate ruler/density error from sculpt/kinematics error before M3.
+R5	Voxel convergence failure on small/thin bodies & pessimistic error bounds	handwired/madhuban-morphology/PLAN-form-follows-function.md (Phase 1: Measurement resolution is part of the result, citing converge.ts)[3]; mass.ts	PARTIALLY VERIFIED (PLAN verified; mass.ts unread)	PLAN documents that converge.ts error bounds are 20–30× pessimistic (cat bound 31% vs. 0.9% actual move), the rat fails to converge at 5.2%, and thin bodies (fish, snake, spider) fall below the 1 cm voxel floor where limb numbers are junk[3]. Fix: every MassSpec exported to Jolt must carry its voxel step size and uncertainty bound, enforce positive-definite inertia (
+𝐼
+𝑥
++
+𝐼
+𝑦
+≥
+𝐼
+𝑧
+I
+x
+	​
+
++I
+y
+	​
+
+≥I
+z
+	​
+
+), and adapt voxel step to species scale (h ≤ minRadius / 3).
+R6	Allometric leverage (0.75 vs. 0.65) & cast eagle non-physicality	handwired/madhuban-morphology/PLAN-form-follows-function.md (Phase 1 & Phase 2, citing core/build/featherCards.js)[3]	VERIFIED	Elephant alone shifts the allometric exponent by 0.10 (0.75 with elephant vs. 0.65 without, 
+𝑟
+2
+=
+0.76
+r
+2
+=0.76
+ over 12 bodies), signaling high single-point leverage. Additionally, the cast eagle SDF is 14 kg (vs. 5 kg real) with only a 0.381 m folded arm because flight feathers live in core/build/featherCards.js[3]. Fix: validate aero/scaling criteria against biological literature, never against the cast SDF alone.
+R7	Repo doc contradictions & untracked/untested morphology checks	handwired/madhuban-morphology/PLAN-form-follows-function.md (Phase 0)[3]; madhuban-morphology/README.md (The mass-construction body vs. The scaffold is not the animal)[4]	VERIFIED	madhuban-morphology/README.md itself contradicts its own primitive count: "roughly 33 primitives per body" in one section and "~48 prims" in the next[4]. PLAN Phase 0 also flags 127-vs-131 prim count and notes published tables lack automated bun test / bun run check (scripts/check.ts) pinning[3]. Fix: pin every published measurement under bun test in M2 before building dynamics on top.
+R8	Dead gradients in Handwired circuits & scaffold-vs-sculpt gap	handwired/madhuban-morphology/PLAN-form-follows-function.md (Phases 2–3, citing src/learned-gallery/trainable-geometry.ts)[3]; madhuban-morphology/README.md[4]	VERIFIED	The 115-number canonical vector (masses.ts) drives only a coarse 33/48-prim scaffold, not the 96–956-prim artist sculpts[4], and Handwired’s banded-sqrt ReLU clamps suffer dead gradients (∂circuit ≠ ∂function)[3]. Fix: keep handwired strictly quarantined offline; use evolutionary/CEM search first and never import handwired into the live browser Three.js/Jolt loop.
+R9	Madhubani coat distance readability, mip washout & high-bend skinning	madhubanvan/PROGRESS.md, src/core/render/madhubani/, MOTIFS.md, app/patterns.html	UNVERIFIED (files unread)	Brief confirms toon/banded shading still fails to read at distance, relief/embossing is rejected, and per-species tile sizing / row-locked scales are undone. Likely mechanisms (to verify in code): fine dark katchni/godna ink averaging to grey across mip levels, insufficient band separation/contour reading at 8–20 m, and future DQ-skinning compression under dynamic drops/trunk curls. Fix: gate M1 strictly on reading the artist’s verbatim note in PROGRESS.md first.
+R10	Cross-repo Elephant drift & incomplete renderer entry	madhubanvan/src/species/elephant/{rig.js,sculpt.js} (no index.js) vs. handwired/madhuban-morphology/elephant.ts	UNVERIFIED (files unread)	Elephant is WIP in madhubanvan without index.js while handwired holds elephant.ts (P1/P2/P3 loop + hand sculpt noted in README.md[4]). Any divergence in joint coordinates or SDF dimensions between repos silently breaks MassSpec → Jolt binding. Fix: enforce an automated < 2% volume/CoM parity test when wiring src/species/elephant/index.js.
+R11	JoltPhysics.js WASM heap leaks & non-determinism	madhubanvan/src/core/physics/ (new module)	UNVERIFIED (not yet implemented)	Emscripten JoltPhysics.js objects (Vec3, RVec3, Quat, settings) are not JS-GC’d; any allocation inside the 60 Hz step leaks WASM heap until tab crash. Multi-threaded WASM breaks determinism and requires COOP/COEP. Fix: pin single-threaded deterministic WASM, pre-allocate scratch objects, and gate with a 50-cycle create/destroy leak test + 600-step determinism test.
+
+PART-1-END
+
+Sources
+help
+
+madhubanvan/README.md at main · mehulmehul1/madhubanvan · GitHub
+madhubanvan/src/species/fox/fox-fullik.ts at main · mehulmehul1/madhubanvan · GitHub
+handwired/madhuban-morphology/PLAN-form-follows-function.md at main · mehulmehul1/handwired · GitHub
+handwired/madhuban-morphology/README.md at main · mehulmehul1/handwired · GitHub
+edit
+more_vert
+User 7:21 PM
+
+Here are the four files you listed as unverified, verbatim and complete, pasted instead of fetched. Do not browse anything this turn. Treat everything between the FILE markers as literal file content, including the artist note, and cite exact line numbers when you make a claim about them.
+
+=== BEGIN FILE: madhubanvan/PROGRESS.md (38883 chars) ===
+
+Madhubani Animals — Progress Report
+
+Living document. Append a new dated session under "Session log" every time we work; never rewrite past sessions.
+Repo: experiments/madhubani-animals (fork of procedural-animals; render layer ported to three.js TSL/WebGPU).
+
+Project in one line
+
+24 procedural animals (SDF sculpt -> surface-nets mesh -> skin -> coat) rendered with a first-class
+Madhubani coat mode. The coat is what we are actively developing.
+
+Status board
+Area	State
+Engine (sculpt / rig / motion / mesher)	Working, upstream, untouched
+Natural coat	Working
+Madhubani coat — chain mode (original)	Superseded by body-space placement; still reachable, now the default path
+Madhubani coat — body-space pattern (default)	Working — motifs in (around, along) metres, zones from designGroup (Session 7)
+Madhubani coat — bomb mode (Voronoi)	Legacy, kept only for A/B via ?mtiles=bomb — wrong placement model, do not use
+Style vocabularies (scallop/kohbar/katchni/godna/tantrik/bharni/vyaghra)	Authored; 8 of 12 motifs per style are assigned to the 8 anatomy zones, 4 are spares (Session 8)
+Per-species tile size	Not done — one global uMotifM (0.06 m) for all species (Session 8)
+Row-locked scales	Not done
+Pattern/palette HTML viewer	Done — patterns.html, 7 styles × 12, palettes, role mask, source links
+Per-creature muscle-mass variation viewer	Not done (requested — see Roadmap)
+Motif library (shapes)	Done — 84 authored SVGs, 12 per style, gate 84/84 (Session 6)
+Motif → GPU bake	Done — role-mask texture array, 84 layers, hand-built mips (Session 6)
+Motif tiling correctness	Done — no self-supplied backgrounds; 12 flat tiles fixed, gate rules bleed + marks added (Session 8)
+Coat look / shading	Flat marks + light binding in place (Session 3) — but the toon shading does not read yet; needs work (Session 4). Relief/embossing decided against (Session 2)
+Session log
+Session 1 — 2026-10-03 — "Option A: tile bombing"
+
+Problem being solved. In chain mode the Madhubani pattern coordinates were baked per vertex as
+skeleton arc-length × (angle × mean radius) and interpolated across triangles. That map is not
+isometric, clamps at chain ends, and jumps at region seams, so scales smeared/stretched over the
+body — worst on the head, shoulder and belly.
+
+Approach chosen (Option A — local tangent-plane tiles / "tile bombing"). At build time we scatter
+seed points over the surface; at render time each fragment finds its own nearest seed and draws the
+style motif in that seed's own tangent plane, so every tile is rigid, uniform and flat. There is no
+global map, hence no pole, no clamping, no stretching.
+
+Work completed
+
+src/core/build/coatFields.js — extracted vertexAnatomy({rig, weights, nV}) (per-vertex
+island/designGroup/axisMode), now shared by the coat fields and the seed builder.
+
+src/core/build/seeds.js (new) — seed build:
+farthest-point sampling (coverage radius 0.60 * C), 2× Lloyd relaxation toward a hex-ish layout,
+coverage repair, per-seed tangent frames (up = toward-tail axial direction), rotation jitter,
+candidate grid (≤4 seeds/cell).
+
+src/core/build/pipeline.js — computes seeds after the warp; adds seedTex, seedGrid, seedGridDims, seedGridOrigin, seedCell, seedTile, seedCount to the built data; extends
+ARRAY_KEYS so workers and .animal bakes carry them.
+
+src/core/render/madhubani/color.js — new bomb mode: 3×3×3 grid search for the nearest + 2nd
+nearest seed (with a same-side normal test), motif drawn in the seed's tangent plane, zone colours
+from the seed's designGroup; chain mode kept verbatim behind ?mtiles=chain.
+
+src/core/render/animalObject-tsl.js — makeMadTextures(data): packs the seed and grid arrays
+into 2D DataTextures (NEAREST, FloatType), disposes them with the object.
+
+src/core/render/coat-tsl.js, src/animal.js, app/main.js — plumb tiles / grid options and
+the mtiles / mdbg URL params.
+
+src/core/render/madhubani/params.js — MAD_SEED_SPACING = 0.070, MAD_TILE = 0.95 * MAD_SEED_SPACING, MAD_SEED_TEXELS = 5.
+
+Bugs found and fixed during this session
+
+dg is not defined (chain mode rendered black). A JS block-scoping slip: the zone-seam line
+lived outside the if (mode === 'chain') block that declared dg. The thrown TSL error made the
+material render black — this is the "all animals are black" the artist saw. Fixed by moving the
+seam inside the chain branch.
+
+Grid texture uploaded short. The grid array held cells texels but the texture was created
+gridW × gridH (rounded up), so the upload was invalid and every fragment fell back to seed 0 ->
+flat fill. Fixed by padding the array to gridW * gridH.
+
+Seed texture exceeded WebGPU's texture-width limit. Uploaded as one strip seedCount * 5
+wide (shark: 10345) — fine in WebGL2 (16384) but WebGPU's default maxTextureDimension2D is
+8192, so the texture failed and the bind group was invalid ("Invalid BindGroup"). This is why
+shark/horse did not load on the artist's WebGPU browser. Fixed by packing BOTH textures 2D at
+width ≤ 2048 and indexing them with mod/floor.
+
+Gaps between scales. The drawn scale radius was smaller than the seed covering radius, so most
+of the surface showed only the ground colour. Fixed by tightening the seed coverage threshold
+(FPS_THRESH = 0.60 * C) and retuning MAD_TILE.
+
+Polygon-mosaic look (feedback from artist). An early cut inked every Voronoi cell boundary and
+discarded the authored motifs, so all styles looked like the same flat polygon grid — and the
+styles stopped reading as our patterns. Fixed by (a) driving the authored motifs from
+fields.js per cell so scallop/kohbar/katchni/godna/tantrik/bharni stay distinct, and
+(b) removing the Voronoi outline so the scale rim is the motif's own arc.
+
+Verified this session
+
+Coverage invariant holds (maxCoverage <= threshold, zero violations) on boar, horse, snake,
+spider, shark — bodies from 0.07 m to ~3 m, legged / limbless / winged / finned.
+
+Rendered and inspected: boar (scallop, kohbar, godna, chain baseline), shark (close-up), horse,
+crow (bird), fish, snake.
+
+Full madhubani batch: 22/24 ok. cow and deer failed on a transient OS file-write error
+(UNKNOWN: unknown error, open out/allspecies/...), not a shader/render failure.
+
+Known issues / caveats (open)
+
+One fixed tile size for every species. MAD_TILE is absolute metres, so a large animal gets
+many tiny tiles and a small animal (rat, spider, frog) gets a few oversized ones. Needs a
+per-species (or bounding-box-relative) size dial.
+
+Scales are not row-locked. Seeds are isotropic, so the scale field is organic rather than the
+reference's neat offset rows.
+
+Fins / membranes are drawn as flat ink/paper grey by design (existing behaviour) — the coat
+pattern does not cover them.
+
+tools/test.mjs cannot run on Windows. Pre-existing bug in tools/bake.mjs:103
+(fs.realpathSync(new URL(import.meta.url).pathname) yields C:\C: and throws ENOENT). Not
+introduced by this work; build validation currently comes from the browser batch instead.
+
+Nearest-seed is found by Euclidean distance with a same-side normal test; on very thin parts that
+are closer than one grid cell there is a small risk of picking the far-side seed.
+
+How to run / verify
+
+code
+Code
+download
+content_copy
+expand_less
+npm run dev                                   # vite, port 5175
+node tools/shot.mjs "http://localhost:5175/?species=boar&seed=1&quality=medium&style=madhubani&mstyle=scallop&palette=1" out/boar.png
+node tools/allspecies.mjs --base http://localhost:5175 --quality low --styles madhubani
+
+Useful URL params: style=madhubani|natural, mstyle=<style>, palette=0..7, mtiles=bomb|chain,
+mdbg=2 (per-seed id debug view), mdbg=3 (grid-cell debug view).
+
+Session 2 — 2026-10-03 — art direction: flat marks + toon shading, no relief
+
+Decision (artist). The coat stays flat: every mark is a 2D graphic element lying on the 3D
+body. The volume must come from toon/banded shading, not from physical relief.
+
+Explicitly dropped. Raised / embossed tiles, normal-mapped tile edges, per-tile bump, baked AO,
+any displaced surface for the pattern. The references may photograph like crafted objects, but the
+target here is the painting's graphic flatness carried on a 3D form.
+
+Consequence for the code. The Madhubani material is MeshBasicNodeMaterial (unlit) with a
+hand-faked flat term in src/core/render/madhubani/color.js:
+tone = 0.95 + 0.05 * step(-0.15, lam). That fake is the placeholder to be replaced by a real cel
+term: N·L quantised into 2–3 hard bands, the flat pattern colour multiplied by those bands, and
+the existing thin ink outline kept (silhouette, optionally a terminator line). No specular, no sheen,
+no crushed blacks — those were the reasons unlit was chosen in the first place, and banding avoids
+them.
+
+Also recorded. Procedural tiling is the fill; authored placement (which motif goes where —
+lotus on the shoulder, border along the back, quiet snout) is a later layer on top of the seeds, not
+a replacement for them. See Roadmap.
+
+Open questions. 2 bands or 3? Ink outline always on, or silhouette only?
+
+Session 3 — 2026-10-03 — toon shading + proper light
+
+Implemented. Toon (cel) shading in src/core/render/madhubani/color.js, replacing the faked flat
+term (tone = 0.95 + 0.05·step(...)): N·L quantised into 3 anti-aliased bands (shadow 0.64 /
+mid 0.84 / light 1.03), multiplied over the flat pattern. Marks stay flat 2D; the volume is read
+from the bands. No specular / sheen / crushed blacks.
+
+Proper light. Added setSun(v) to the Madhubani material (color.js) and bound it in
+app/main.js to the scene's key DirectionalLight every frame — the world light direction is
+transformed into the animal's local space before use. No more hardcoded sun constant; the bands now
+track the real light (and will follow it if the light moves, or as more lights are added).
+
+Verified. Rendered boar and shark to confirm banding reads on both a lumpy and a long smooth
+form (out/boar-toon.png, out/shark-toon.png, out/boar-toon2.png). Since the scene light's
+direction equals the old constant, the look is unchanged — which is the expected, correct result and
+confirms the binding didn't shift anything.
+
+Note. Dev server now run with bun run dev (not npm).
+
+Open. 2 vs 3 bands; band contrast; whether to ink the terminator line. Also tools/shot.mjs has
+a hardcoded 30s screenshot timeout that trips on SwiftShader — renders here used a longer-timeout
+probe.
+
+Session 4 — 2026-10-03 — session close: the toon shading does NOT read yet
+
+Artist verdict (verbatim). "honestly i cant tell the difference with this toon shading at all"
+
+Recorded status. Toon shading is implemented but not convincing — it needs work. Do not treat
+it as done. The light binding (Session 3) is real and correct, but it is backing, not a visible result.
+
+Likely reasons to investigate next session (start here)
+
+Band values are too close. 0.64 / 0.84 / 1.03 is a ~20 % step per edge — hard to see under a
+busy, high-contrast pattern. Try 2 bands with a big gap (e.g. 0.55 / 1.0), or 3 bands with a much
+darker shadow.
+
+The test could not show a difference. The scene key light's direction equals the old hardcoded
+constant, so the render was bound to look the same. Prove it by deliberately moving the key light
+and re-rendering.
+
+The band multiply sits on top of everything. It multiplies the whole pattern and the
+grain/contour passes that run after it, so the form cue drowns in the pattern's own contrast.
+Consider applying bands before the pattern's tone variation, or damping the pattern where a band
+edge falls.
+
+No terminator line. A toon read usually needs the drawn edge — an ink line along the shadow
+boundary — not just a value step.
+
+Possibly the wrong idea for this look. Flat marks may want no interior shading at all
+(fully flat colour + silhouette outline), with form implied only by the outline and the cast
+shadow on the ground.
+
+State at session close. Code compiles and runs: bomb tiles + 3-band toon + scene-light binding.
+Dev server stopped.
+
+Session 5 — 2026-10-03 — agreed: rebuild the motif library as authored SVG
+
+Artist question (verbatim). "i was not aware that the patterns are also being done in sdf, is that
+why they appear blown out or jittery on the animals?"
+
+Answer — partly yes, and the causes split cleanly:
+
+Crude shapes → the vocabulary, not SDF itself. Every motif in fields.js is a circle, a line,
+an axis-aligned box/triangle, radial spokes (fract(ang * k)) or a sine. An SDF can be perfectly
+crisp; ours are primitives standing in for drawing.
+
+Jitter / crawl → a procedural pattern cannot be mip-filtered. When a tile covers only a few
+pixels there is no lower-resolution version to sample, so it aliases and shimmers as the camera or
+the animal moves. A texture atlas fixes this (mipmaps + anisotropic filtering).
+
+Blown out / fat black lines → the line-width fallback in ln():
+ws = max(w * rim, fwidth * 0.5). Motif lines are sub-pixel at normal zoom, so the fwidth * 0.5
+floor takes over; at grazing angles the derivative explodes and the "line" blooms until it fills the
+area. This is the same failure the file's own comments describe. On top of that, many fills use a
+raw step() with no anti-aliasing at all → jagged, crawling edges.
+
+Dead code bug: the third argument of ln(x, w, aa) is never used, so every 0.012 /
+0.010 passed in fields.js does nothing; real weight is w * rimScale plus the derivative floor.
+
+Agreed plan (work starts tomorrow). Rebuild the motif library as SVG, authored by the artist —
+I write the SVG code. Bake the motifs to an atlas; the shader only places and colours them. This
+fixes filtering (real mipmaps), replaces primitives with real drawings, and introduces named colour
+roles (outline / fill A-B-C / ground / bead) so any motif can be recoloured by a palette.
+
+Session 6 — 2026-10-08 — the motifs are on the animals
+
+The library is real art now, and it renders. 84 authored SVGs (7 styles × 12), every one passing
+the quality gate, baked to role-mask textures and sampled by the coat shader.
+
+What changed:
+
+12 motifs per style, all distinct. 8 body zones get 8 different motifs; 4 spares for variety.
+Previously one tile was reused across four zones, which is why every zone looked the same.
+
+Quality gate passes: 84/84, 0 failures. It started at 18 failures; seven repair passes fixed
+them. The gate checks ink density, bead count, element count, and rejects literal colours.
+
+tools/bakeatlas.mjs rasterizes each SVG four times — once per role group — reading alpha as
+per-role coverage, packing R=ink G=fillA B=fillB A=bead. Ground is where all four are zero.
+
+src/core/render/madhubani/atlas.js stacks all 84 motifs into ONE DataArrayTexture
+(84 layers @ 256px, 21 MB) with hand-generated mipmaps. Mip reduction is exact here because each
+channel is coverage, not colour — so averaging blurs a motif without bleeding roles.
+
+All styles in one array, not seven textures. A texture binding is baked into the shader at
+build time, so per-style textures would mean rebuilding the material on every style change.
+Instead style selection is one uAtlasOffset uniform. Runtime switching is free.
+
+color.js bomb mode samples the atlas by zone tile id and composites
+ground → fill B → fill A → bead → ink. The SDF path stays as a fallback: a missing bake degrades
+instead of breaking the coat (verified by blocking the fetch).
+
+uMotifScale (3.0). The first render was legible-but-noisy: uTile is the Voronoi cell size
+(~0.085 m), so a motif repeated ~17× along a 1.5 m boar. Letting a motif span 3 cells gives ~5
+readable repeats, which is the difference between noise and a drawing.
+
+Two things worth recording as decisions, not accidents:
+
+Stroke-only classes need role-aware paint. si / sa are stroke-only by contract, and SVG
+defaults fill to black — so a blanket * { fill: #fff } in the baker silently turned every thin
+ruled line into a filled blob. The bake now resets to fill:none;stroke:none and re-enables per
+role, which also splits the two-tone classes (sia / sib) so the ink render takes only the
+outline and the fill render only the body.
+
+Mipmaps are generated by hand, not by three.js. Behaviour for DataArrayTexture mip generation
+is backend-dependent; doing it in JS costs ~1 ms per load and removes the question.
+
+Verified: gate 84/84 · diagnostics clean across the project · zero shader-compile errors on the 3D
+render · SDF fallback path exercised · uv-attribute warnings confirmed pre-existing (present
+identically with the atlas blocked, so not introduced here).
+
+Honest limitation: this rendered through the WebGL2 fallback, not WGSL — headless Chromium in
+this environment has no WebGPU adapter. .depth() on a TSL texture node is documented in three r186
+(TextureNode.js:88, "When using texture arrays, the depth node defines the layer to select") and
+should emit textureSample(t, s, uv, layer), but it is unverified on the WGSL backend. Check it
+in a real browser before trusting it.
+
+Still open at this point: zone boundaries were Voronoi cells, not anatomy. Fixed in Session 7 — the
+plumbing here turned out to be correct while the placement model underneath it was wrong.
+
+Session 7 — 2026-10-08 — the Voronoi premise was wrong; paint in body space
+
+Session 6 wired the SVG atlas correctly and I still could not tell it apart from the old SDF output on
+screen. Chasing that as a stale-build problem was wrong three times over: the server was serving the
+right code throughout, and the A/B difference was genuinely marginal. The artist asked the right
+question — why are we using Voronoi at all? — and the reference paintings settled it.
+
+What the references show, and what we could never produce. One coherent surface parameterization;
+large anatomical zones with smooth organic boundaries; motif direction following each part's own
+axis; contour compression where the body turns away; and not one straight polygon edge anywhere.
+
+Reading the three reference paintings concretely, since they are the spec for this look:
+
+Cow — rope-texture bands run around the barrel, i.e. horizontal rings; the same animal's leg
+stripes run vertical. So direction is per-zone and follows the part's own axis, not one global
+direction. Head and neck are stippled with no bands at all. There is a visible vertical join line
+where the pattern closes around the body — so our angular-wrap seam is authentic, not a defect.
+
+Bird/deer creature — overlapping fan shapes in dense regular rows. They visibly compress and
+splay where the body turns away over the back and rump. That compression is the signature of a real
+surface parameterization, and we had nothing that could produce it.
+
+Boar — the clearest case: overlapping scallop fans in large anatomical colour zones (blue-grey
+back, tan flank and rump, red head and legs, pale belly, striped tail) wit
+
+edit
+more_vert
+more_vert
+more_vert
+more_vert
+more_vert
+more_vert
+thumb_up
+thumb_down
+info
+Google AI models may make mistakes, so double-check outputs.
+Use Arrow Up and Arrow Down to select a turn, Enter to jump to it, and Escape to return to the chat.
+add_circle
+key_off
+widgets
+Tools
+code
+Code execution
+close
+google
+Grounding with Google Search
+close
+link
+URL context
+close
+chevron_right
+mic
+Run
+Ctrl
+keyboard_return
+Run settings
+code
+Get code
+reset_settings
+close
+Gemini 4 Neon
+gemini-4-neon
+Frontier-level intelligence with fast end-to-end task completion across complex software engineering, analytical, and science workflows.
+System instructions
+Optional tone and style instructions for the model
+Thinking level
+High
+expand_more
+
+Tools
+
+Structured outputs
+
+Edit
+
+Code execution
+
+Function calling
+
+Edit
+
+Grounding with Google Search
+
+Source:
+Google Search
+URL context
+expand_more
+
+Advanced settings
+
+Media resolution
+Default
+Safety settings
+Edit
+Add stop sequence
+Output length
+Up to 1,048,576. Responses beyond 65,536 tokens continue automatically in multiple parts, so they take longer.
+Response ready.

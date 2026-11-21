@@ -9,6 +9,7 @@
 // Load it in a game with:  createAnimal('<species>', { baked: await (await fetch(url)).arrayBuffer() })
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { createAnimal, buildAnimalData, loadSpecies, writeBake, readBake, QUALITY } from '../src/index.js';
 import { ARRAY_KEYS } from '../src/core/build/pipeline.js';
 
@@ -100,5 +101,5 @@ async function main() {
   console.log(`OK ${out}: ${speciesId} seed ${seed} ${quality}, ${data.nV} vertices, ${(disk.byteLength / 1048576).toFixed(2)} MB; build ${t1 - t0} ms, verify ${t2 - t1} ms, load from bake ${loadMs} ms (round trip identical)`);
 }
 
-const isMain = process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(new URL(import.meta.url).pathname);
+const isMain = process.argv[1] && fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(fileURLToPath(import.meta.url));
 if (isMain) main().catch((e) => fail(e.stack || e.message));

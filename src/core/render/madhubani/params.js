@@ -15,7 +15,6 @@ export const STYLES = {
   godna: { label: 'Godna · tattoo dots', tileH: 0.060, tileW: 0.060, hatch: 3, outline: 0.06, wobble: 0.020, colours: 2, rim: 0.32 },
   tantrik: { label: 'Tantrik · yantra', tileH: 0.095, tileW: 0.082, hatch: 3, outline: 0.10, wobble: 0.025, colours: 4, rim: 0.38 },
   bharni: { label: 'Bharni · filled', tileH: 0.120, tileW: 0.100, hatch: 3, outline: 0.12, wobble: 0.030, colours: 4, rim: 0.42 },
-  vyaghra_tiger: { label: 'Vyaghra · tiger', tileH: 0.110, tileW: 0.090, hatch: 3, outline: 0.10, wobble: 0.050, colours: 3, rim: 0.45 },
 };
 
 export const STYLE_KEYS = ['scallop', 'vyaghra', 'kohbar', 'katchni', 'godna', 'tantrik', 'bharni'];
@@ -35,8 +34,4 @@ export const PALETTES = [
 ];
 
 // --- Tile-bombing ("Option A") constants, in METRES (bind space, post-warp) ---
-// Seed spacing == grid cell size. The guarantee that a 3x3x3 grid search finds the
-// nearest seed requires: every surface point is within ONE CELL of a seed.
-export const MAD_SEED_SPACING = 0.070;            // C
-export const MAD_TILE = 0.95 * MAD_SEED_SPACING;  // drawn tile size S (motif arc lands inside the cell)
 export const MAD_SEED_TEXELS = 5;                 // RGBA texels per seed in the seed texture

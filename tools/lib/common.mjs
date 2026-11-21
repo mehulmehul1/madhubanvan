@@ -25,10 +25,24 @@ export const CHROME_ARGS = [
 export function findChrome() {
   const fixed = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
   if (fs.existsSync(fixed)) return fixed;
-  const caches = [process.env.PLAYWRIGHT_BROWSERS_PATH, path.join(os.homedir(), 'Library/Caches/ms-playwright'), path.join(os.homedir(), '.cache/ms-playwright'), '/opt/pw-browsers'].filter(Boolean);
+  const winFixed = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+  ];
+  for (const p of winFixed) {
+    if (fs.existsSync(p)) return p;
+  }
+  const caches = [
+    process.env.PLAYWRIGHT_BROWSERS_PATH,
+    process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'ms-playwright') : null,
+    path.join(os.homedir(), 'Library/Caches/ms-playwright'),
+    path.join(os.homedir(), '.cache/ms-playwright'),
+    '/opt/pw-browsers'
+  ].filter(Boolean);
   const bins = [
-    ['chromium_headless_shell-', ['chrome-headless-shell-mac-arm64/chrome-headless-shell', 'chrome-headless-shell-mac/chrome-headless-shell', 'chrome-linux/headless_shell', 'chrome-headless-shell-linux64/chrome-headless-shell']],
-    ['chromium-', ['chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing', 'chrome-mac/Chromium.app/Contents/MacOS/Chromium', 'chrome-linux/chrome', 'chrome-linux64/chrome']],
+    ['chromium_headless_shell-', ['chrome-headless-shell-win64/headless_shell.exe', 'chrome-headless-shell-win/headless_shell.exe', 'chrome-headless-shell-mac-arm64/chrome-headless-shell', 'chrome-headless-shell-mac/chrome-headless-shell', 'chrome-linux/headless_shell', 'chrome-headless-shell-linux64/chrome-headless-shell']],
+    ['chromium-', ['chrome-win/chrome.exe', 'chrome-win64/chrome.exe', 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing', 'chrome-mac/Chromium.app/Contents/MacOS/Chromium', 'chrome-linux/chrome', 'chrome-linux64/chrome']],
   ];
   for (const [prefix, rels] of bins) {
     for (const dir of caches) {
@@ -117,7 +131,8 @@ export function writeDataUrl(file, url) {
 export function composeSheet(spec) {
   const tmp = path.join(mkdirp(path.join(OUT, 'tmp')), `sheet_${process.pid}_${Date.now()}.json`);
   fs.writeFileSync(tmp, JSON.stringify(spec));
-  const r = spawnSync('python3', [path.join(TOOLS, 'lib', 'sheet.py'), tmp], { encoding: 'utf8' });
+  const py = process.platform === 'win32' ? 'python' : 'python3';
+  const r = spawnSync(py, [path.join(TOOLS, 'lib', 'sheet.py'), tmp], { encoding: 'utf8' });
   fs.rmSync(tmp, { force: true });
   if (r.status !== 0) throw new Error('sheet composition failed: ' + (r.stderr || r.stdout || r.error));
   return spec.out;

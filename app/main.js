@@ -4,6 +4,7 @@ import * as THREE from 'three/webgpu';
 import { createAnimal, listSpecies } from '../src/index.js';
 import { STYLE_KEYS } from '../src/core/render/madhubani/params.js';
 import { loadMotifAtlasSet } from '../src/core/render/madhubani/atlas.js';
+import { VARIATION_PRESETS } from './variations.js';
 
 const params = new URLSearchParams(location.search);
 const SPECIES = params.get('species') || 'cheetah';
@@ -14,6 +15,9 @@ const PALETTE = Number(params.get('palette') || 0);
 const MSTYLE = params.get('mstyle') || 'vyaghra';
 const VARIANT = params.get('variant') || '';
 const BRUSH = params.get('brush') === '1';
+const PRESET_ID = Number(params.get('preset') || 0);
+const activePreset = VARIATION_PRESETS.find((p) => p.id === PRESET_ID);
+const overrides = activePreset ? activePreset.overrides : {};
 // `chain` = body-space pattern space (arc length along the part x arc length around it, both in
 // metres) with zones from the baked anatomical designGroup. This is the correct placement model and
 // the default. `bomb` = the old per-seed Voronoi/tangent-plane path, kept only for comparison.
@@ -42,6 +46,7 @@ function panel(vlist) {
   bar.innerHTML =
     `<select id="sp">${ids.map((i) => `<option ${i === SPECIES ? 'selected' : ''}>${i}</option>`).join('')}</select>` +
     (vlist.length ? `<select id="vr"><option value="">default</option>${vlist.map((v) => `<option value="${v.id}" ${v.id === VARIANT ? 'selected' : ''}>${v.name}</option>`).join('')}</select>` : '') +
+    `<select id="pr" title="SDF Muscle-Mass / Conformation Variation"><option value="0">var: default</option>${VARIATION_PRESETS.map((p) => `<option value="${p.id}" ${p.id === PRESET_ID ? 'selected' : ''}>#${p.id} ${p.name.split(' ')[0]}</option>`).join('')}</select>` +
     `<label>seed <input id="sd" type="number" value="${SEED}" style="width:56px"></label>` +
     `<select id="q">${['high', 'medium', 'low', 'crowd'].map((q) => `<option ${q === QUALITY ? 'selected' : ''}>${q}</option>`).join('')}</select>` +
     `<select id="st"><option ${STYLE !== 'madhubani' ? 'selected' : ''}>natural</option><option ${STYLE === 'madhubani' ? 'selected' : ''}>madhubani</option></select>` +
@@ -57,8 +62,9 @@ function panel(vlist) {
     location.search = p.toString();
   };
   // switching species drops the variant (ids are species-specific)
-  bar.querySelector('#sp').onchange = (e) => go({ species: e.target.value, variant: '' });
+  bar.querySelector('#sp').onchange = (e) => go({ species: e.target.value, variant: '', preset: '' });
   if (vlist.length) bar.querySelector('#vr').onchange = (e) => go({ variant: e.target.value });
+  bar.querySelector('#pr').onchange = (e) => go({ preset: e.target.value });
   bar.querySelector('#q').onchange = (e) => go({ quality: e.target.value });
   bar.querySelector('#sd').onchange = (e) => go({ seed: e.target.value });
   bar.querySelector('#st').onchange = (e) => go({ style: e.target.value });
@@ -84,11 +90,14 @@ async function main() {
       console.log(`[madhubani] motif atlas: ${madhubaniAtlas.layers} layers @ ${madhubaniAtlas.cellSize}px, styles=${madhubaniAtlas.styles.join(',')}`);
     }
   }
-  status('building ' + SPECIES + ' seed ' + SEED + ' (' + QUALITY + ')…');
+  status('building ' + SPECIES + ' seed ' + SEED + (activePreset ? ` [${activePreset.name}]` : '') + ' (' + QUALITY + ')…');
   const animal = await createAnimal(SPECIES, {
     seed: SEED, quality: QUALITY, worker: false, ground: () => 0, variant: VARIANT || undefined, brush: BRUSH,
     style: STYLE, palette: PALETTE, madhubaniStyle: MSTYLE, madhubaniSeed: SEED, madhubaniTiles: MTILES,
     madhubaniAtlas,
+    sex: overrides.sex,
+    age: overrides.age,
+    overrides,
   });
   window.__animal = animal;
   if (MDBG && animal.render.materials?.mad?.setDebug) animal.render.materials.mad.setDebug(Number(MDBG));
@@ -97,14 +106,15 @@ async function main() {
   scene.background = new THREE.Color(0xefe6d6);
   scene.add(animal.object);
 
+  const CAM_FIXED = params.get('cam') === 'fixed';
   // frame from the bind mesh (geometries carry a 1e6 bounding sphere for culling, so Box3 is unsafe)
   const box = new THREE.Box3();
   const v = new THREE.Vector3();
   const P = animal.data.pos;
   for (let i = 0; i < animal.data.nV; i++) box.expandByPoint(v.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]));
-  const center = box.getCenter(new THREE.Vector3());
+  const center = CAM_FIXED ? new THREE.Vector3(0, 1.05, 0.1) : box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const radius = Math.max(size.x, size.y, size.z) * 1.15 || 1;
+  const radius = CAM_FIXED ? 2.35 : (Math.max(size.x, size.y, size.z) * 1.15 || 1);
   const camDist = radius * 2.3;
 
   const floor = new THREE.Mesh(
@@ -133,6 +143,8 @@ async function main() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   document.body.appendChild(renderer.domElement);
   await renderer.init();
+  console.log(`[renderer] backend=${renderer.backend?.isWebGPUBackend ? 'WebGPU' : 'WebGL2'}`);
+  window.__renderer = renderer;
 
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;

@@ -9,13 +9,18 @@
 //     --nocov    uncheck the fur-shell toggle so the coat is actually visible
 //     --noatlas  block the *.bin fetch, forcing the SDF fallback — the A/B baseline
 import { chromium } from 'playwright-core';
+import { findChrome } from './lib/common.mjs';
 
-const [url = 'http://localhost:5175/?style=madhubani&species=boar&mstyle=katchni&mtiles=bomb&seed=7',
+const [url = 'http://localhost:5175/?style=madhubani&species=boar&mstyle=katchni&mtiles=chain&seed=7',
        out = 'out/shot.png'] = process.argv.slice(2);
 const nocov = process.argv.includes('--nocov');
 const noatlas = process.argv.includes('--noatlas');
 
-const browser = await chromium.launch({ args: ['--enable-unsafe-webgpu', '--use-angle=default'] });
+const CHROME = process.env.PROCEDURAL_ANIMALS_CHROME || findChrome();
+const browser = await chromium.launch({
+  executablePath: CHROME,
+  args: ['--enable-unsafe-webgpu', '--use-angle=default', '--ignore-gpu-blocklist', '--disable-gpu-sandbox', '--no-first-run']
+});
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
 if (noatlas) await page.route('**/atlas/*.bin', (r) => r.abort());
@@ -48,10 +53,12 @@ await page.waitForTimeout(6000);
 
 const info = await page.evaluate(() => {
   const a = window.__animal;
+  const r = window.__renderer;
   return {
     ok: !!a,
     species: a?.species?.id ?? null,
     mad: !!a?.render?.materials?.mad,
+    backend: r?.backend?.isWebGPUBackend ? 'WebGPU' : (r?.backend?.isWebGLBackend ? 'WebGL2' : (navigator.gpu ? 'WebGPU' : 'WebGL2')),
     status: document.querySelector('#status')?.textContent?.slice(0, 300) ?? null,
   };
 });
