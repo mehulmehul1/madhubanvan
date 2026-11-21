@@ -153,12 +153,25 @@ export function solveFoxIK(options = {}) {
     }
   }
 
+  const jointPositions = {};
+  for (const [name, c] of Object.entries(chains)) {
+    if (name === 'spine') continue;
+    jointPositions[name] = {};
+    for (const b of c.bones) {
+      jointPositions[name][b.name] = {
+        start: [b.start.x, b.start.y, b.start.z],
+        end: [b.end.x, b.end.y, b.end.z],
+      };
+    }
+  }
+
   return {
     solved,
     chains,
     targets,
     maxResidualMm,
     converged: allConverged,
+    jointPositions,
     stance: {
       hull: footPoints,
       area,

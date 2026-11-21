@@ -41,7 +41,7 @@ function islandOfBone(bone) {
   switch (r) {
     case 'torso': return n === 'chest' ? ISL.chest : ISL.torso;
     case 'neck': return ISL.neck;
-    case 'head': return ISL.head;
+    case 'head': case 'trunk': return ISL.head;
     case 'jaw': case 'muzzle': case 'tongue': case 'fang': return ISL.jaw;
     case 'ear': case 'horn': return ISL.ear;
     case 'tail': return ISL.tail;

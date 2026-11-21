@@ -12,6 +12,7 @@ const loaders = {
   deer: () => import('./species/deer/index.js'),
   dog: () => import('./species/dog/index.js'),
   eagle: () => import('./species/eagle/index.js'),
+  elephant: () => import('./species/elephant/index.js'),
   fish: () => import('./species/fish/index.js'),
   fox: () => import('./species/fox/index.js'),
   frog: () => import('./species/frog/index.js'),

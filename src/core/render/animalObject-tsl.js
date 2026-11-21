@@ -124,6 +124,7 @@ export function createAnimalObject(data, species = {}, opts = {}) {
   shellMesh.receiveShadow = base.receiveShadow;
 
   // fins: a 2-segment card instanced once per skin vertex, fed the same per-vertex data
+  // WebGPU limits maxVertexBuffers to 8, so interleave skinIndex + skinWeight and omit unused iSurf
   const fg = new THREE.InstancedBufferGeometry();
   fg.setAttribute('position', new THREE.Float32BufferAttribute(FIN_POS, 3));
   fg.setIndex(FIN_IDX);
@@ -134,9 +135,22 @@ export function createAnimalObject(data, species = {}, opts = {}) {
   inst('iTint', data.tint, 4);
   inst('iCoat', data.coat, 4);
   inst('iPat', data.pat, 4);
-  inst('iSurf', data.surf, 4);
-  inst('iSkinIndex', new Float32Array(data.skinIndex), 4);
-  inst('iSkinWeight', data.skinWeight, 4);
+
+  const skinBuf = new Float32Array(data.nV * 8);
+  for (let i = 0; i < data.nV; i++) {
+    const o8 = i * 8, o4 = i * 4;
+    skinBuf[o8] = data.skinIndex[o4];
+    skinBuf[o8 + 1] = data.skinIndex[o4 + 1];
+    skinBuf[o8 + 2] = data.skinIndex[o4 + 2];
+    skinBuf[o8 + 3] = data.skinIndex[o4 + 3];
+    skinBuf[o8 + 4] = data.skinWeight[o4];
+    skinBuf[o8 + 5] = data.skinWeight[o4 + 1];
+    skinBuf[o8 + 6] = data.skinWeight[o4 + 2];
+    skinBuf[o8 + 7] = data.skinWeight[o4 + 3];
+  }
+  const iSkinIb = new THREE.InstancedInterleavedBuffer(skinBuf, 8);
+  fg.setAttribute('iSkinIndex', new THREE.InterleavedBufferAttribute(iSkinIb, 4, 0));
+  fg.setAttribute('iSkinWeight', new THREE.InterleavedBufferAttribute(iSkinIb, 4, 4));
   fg.instanceCount = data.nV;
   fg.boundingSphere = g.boundingSphere;
   const fins = new THREE.Mesh(fg, mats.fins);

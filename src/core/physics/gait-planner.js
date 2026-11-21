@@ -17,22 +17,34 @@ export class QuadrupedGaitPlanner {
     this.headingRad = options.headingRad ?? 0;
     this.yawRateRadS = options.yawRateRadS ?? 0;
 
-    // Nominal foot positions in local fox frame from foxRig.J (0.0085 m paw height)
-    this.nominalFootholds = {
+    this.nominalFootholds = options.nominalFootholds || {
       FL: [0.028, 0.0085, 0.222],
       FR: [-0.028, 0.0085, 0.222],
       HL: [0.033, 0.0085, -0.180],
       HR: [-0.033, 0.0085, -0.180],
     };
 
-    const initGround = options.groundFn || ((x, z) => 0);
-    this.legs = {
-      FL: { phaseOffset: 0.0, isStance: true, touchdownPos: [...this.nominalFootholds.FL], currentPos: [...this.nominalFootholds.FL], slipM: 0 },
-      HR: { phaseOffset: 0.0, isStance: true, touchdownPos: [...this.nominalFootholds.HR], currentPos: [...this.nominalFootholds.HR], slipM: 0 },
-      FR: { phaseOffset: 0.5, isStance: false, touchdownPos: [...this.nominalFootholds.FR], currentPos: [...this.nominalFootholds.FR], slipM: 0 },
-      HL: { phaseOffset: 0.5, isStance: false, touchdownPos: [...this.nominalFootholds.HL], currentPos: [...this.nominalFootholds.HL], slipM: 0 },
-    };
+    const isLateral = options.gaitType === 'lateral_sequence';
+    const defaultOffsets = isLateral
+      ? { HL: 0.0, FL: 0.25, HR: 0.50, FR: 0.75 }
+      : { FL: 0.0, HR: 0.0, FR: 0.50, HL: 0.50 };
+    const phaseOffsets = options.phaseOffsets || defaultOffsets;
 
+    const initGround = options.groundFn || ((x, z) => 0);
+    this.legs = {};
+    for (const [name, offset] of Object.entries(phaseOffsets)) {
+      const nom = this.nominalFootholds[name] || [0, 0, 0];
+      const isStance = offset < this.dutyFactor;
+      this.legs[name] = {
+        phaseOffset: offset,
+        isStance,
+        touchdownPos: [...nom],
+        currentPos: [...nom],
+        slipM: 0,
+      };
+    }
+
+    this.maxHalfStride = options.maxHalfStride ?? (this.nominalStandY * 0.065);
     this.maxWalkingSlipM = 0;
   }
 
@@ -60,7 +72,7 @@ export class QuadrupedGaitPlanner {
 
     // Raibert neutral displacement
     const halfStride = (tStance * 0.5) * vFwd + this.kCapture * vErr;
-    const maxHalfStride = 0.025; // 2.5 cm stride displacement within natural fox reach
+    const maxHalfStride = this.maxHalfStride ?? 0.025;
     const clampedHalfStride = Math.max(-maxHalfStride, Math.min(maxHalfStride, halfStride));
 
     const targets = {};

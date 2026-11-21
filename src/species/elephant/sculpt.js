@@ -81,7 +81,7 @@ export function sculptElephant(m, rig, params = {}) {
     const r = (t) => Math.max(0.075, 0.225 * (1 - 0.66 * t));
     C({ tag: 'trunk', bone: 'trunk' + i, a, b, ra: r(t0), rb: r(t1), k: i === 0 ? 0.08 : 0.045 });
   }
-  SP({ tag: 'trunktip', bone: 'trunk' + TRUNK_SEGS, c: J['trunk' + TRUNK_SEGS], rad: 0.075, k: 0.045 });
+  SP({ tag: 'trunktip', bone: 'trunk' + (TRUNK_SEGS - 1), c: J['trunk' + TRUNK_SEGS], rad: 0.075, k: 0.045 });
 
   // ---------------------------------------------------------------- TUSKS (upper incisors: thick at
   // the root, arcs forward then up) — they root in the upper jaw either side of the trunk
