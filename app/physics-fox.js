@@ -7,6 +7,8 @@ import { getJolt, JoltWorld } from '../src/core/physics/jolt-world.js';
 import { FoxSplitAuthorityController } from '../src/core/physics/legged-controller.js';
 
 let scene, camera, renderer;
+let refContainer = null;
+let physContainer = null;
 let refFox = null;
 let physFox = null;
 let joltWorld = null;
@@ -29,8 +31,41 @@ async function initScene() {
   scene.background = new THREE.Color(0xefe6d6);
 
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-  camera.position.set(0, 1.2, 3.2);
-  camera.lookAt(0, 0.35, 0);
+  window.camera = camera;
+  window.scene = scene;
+
+  // Lightweight 3D orbit controls
+  let isDragging = false;
+  let prevPointer = { x: 0, y: 0 };
+  let spherical = { radius: 3.4, theta: 0.40, phi: 1.15 }; // 3/4 dynamic perspective
+
+  function updateCamera() {
+    camera.position.x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+    camera.position.y = spherical.radius * Math.cos(spherical.phi);
+    camera.position.z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+    camera.lookAt(0, 0.35, 0);
+  }
+  updateCamera();
+
+  container.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    prevPointer = { x: e.clientX, y: e.clientY };
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - prevPointer.x;
+    const dy = e.clientY - prevPointer.y;
+    prevPointer = { x: e.clientX, y: e.clientY };
+    spherical.theta -= dx * 0.008;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI * 0.48, spherical.phi - dy * 0.008));
+    updateCamera();
+  });
+  window.addEventListener('pointerup', () => { isDragging = false; });
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    spherical.radius = Math.max(1.0, Math.min(10.0, spherical.radius + e.deltaY * 0.003));
+    updateCamera();
+  }, { passive: false });
 
   renderer = new THREE.WebGPURenderer({ antialias: true });
   renderer.setSize(width, height);
@@ -53,12 +88,12 @@ async function initScene() {
   // Load Reference Fox (Left) and Physics Fox (Right) mounted in outer parent groups
   // Preserving binding engine contract: animal.object MUST keep identity transform (llms.txt:47, 172)
   try {
-    const refContainer = new THREE.Group();
+    refContainer = new THREE.Group();
     refContainer.position.set(-0.65, 0, 0);
     scene.add(refContainer);
+    window.refContainer = refContainer;
 
-    refFox = await createAnimal({
-      species: 'fox',
+    refFox = await createAnimal('fox', {
       quality: 'medium',
       style: 'madhubani',
       mstyle: 'vyaghra',
@@ -69,13 +104,12 @@ async function initScene() {
     refFox.object.rotation.set(0, 0, 0);
     refContainer.add(refFox.object);
 
-    const physContainer = new THREE.Group();
+    physContainer = new THREE.Group();
     physContainer.position.set(0.65, 0, 0);
     scene.add(physContainer);
     window.physContainer = physContainer;
 
-    physFox = await createAnimal({
-      species: 'fox',
+    physFox = await createAnimal('fox', {
       quality: 'medium',
       style: 'madhubani',
       mstyle: 'vyaghra',
@@ -85,8 +119,14 @@ async function initScene() {
     physFox.object.position.set(0, 0, 0); // Strict identity transform
     physFox.object.rotation.set(0, 0, 0);
     physContainer.add(physFox.object);
+    window.__physFox = physFox;
+    window.__initDone = true;
   } catch (err) {
     console.error('Failed to create animal meshes, falling back to procedural proxy:', err);
+    window.__lastInitError = {
+      message: err.message,
+      stack: err.stack,
+    };
   }
 
   // Setup initial mode
@@ -118,10 +158,22 @@ function setupMode(mode) {
     joltWorld.dispose();
   }
 
+  const rampAngleRad = (15 * Math.PI) / 180;
+
+  // Align Reference Fox with terrain orientation
+  if (refContainer) {
+    if (mode === 'ramp') {
+      refContainer.rotation.x = -rampAngleRad;
+      refContainer.position.set(-0.65, 0, 0);
+    } else {
+      refContainer.rotation.set(0, 0, 0);
+      refContainer.position.set(-0.65, 0, 0);
+    }
+  }
+
   getJolt().then((Jolt) => {
     joltWorld = new JoltWorld(Jolt);
 
-    const rampAngleRad = (15 * Math.PI) / 180;
     let groundFn = (x, z) => 0;
     let targetPitchRad = 0;
     let isGravityFree = false;
@@ -139,9 +191,15 @@ function setupMode(mode) {
       targetPitchRad = rampAngleRad;
       joltWorld.createRamp(12, 6, 0.5, 15, [0, 0, 0]);
 
-      const geo = new THREE.BoxGeometry(6, 0.5, 12);
+      // Align Three.js visual ramp with Jolt collider:
+      // Jolt lowers the center by topOffset = (thickness * 0.5) / cos(rampAngleRad)
+      // so top contact surface at z=0 lands precisely at y=0.
+      const thickness = 0.5;
+      const topOffset = (thickness * 0.5) / Math.cos(rampAngleRad);
+      const geo = new THREE.BoxGeometry(6, thickness, 12);
       const mat = new THREE.MeshStandardMaterial({ color: 0xc8bba2, roughness: 0.8 });
       terrainMesh = new THREE.Mesh(geo, mat);
+      terrainMesh.position.set(0, -topOffset, 0);
       terrainMesh.rotation.x = -rampAngleRad;
       scene.add(terrainMesh);
     } else if (mode === 'drop') {
@@ -166,6 +224,11 @@ function setupMode(mode) {
       groundFn,
       position: [0.65, initialDrop, 0],
     });
+    window.joltWorld = joltWorld;
+    window.controller = controller;
+  }).catch((err) => {
+    console.error('Failed to setup Jolt controller:', err);
+    window.__setupError = { message: err.message, stack: err.stack };
   });
 }
 
@@ -173,9 +236,11 @@ function triggerDrop() {
   if (!joltWorld || !controller) return;
   const pPos = joltWorld.getPosition(controller.pelvisId);
   const tPos = joltWorld.getPosition(controller.thoraxId);
+  const pitchRad = controller.targetPitchRad || 0;
+  const rot = [Math.sin(-pitchRad * 0.5), 0, 0, Math.cos(-pitchRad * 0.5)];
 
-  joltWorld.setPositionAndRotation(controller.pelvisId, [pPos[0], pPos[1] + 0.30, pPos[2]], [0, 0, 0, 1]);
-  joltWorld.setPositionAndRotation(controller.thoraxId, [tPos[0], tPos[1] + 0.30, tPos[2]], [0, 0, 0, 1]);
+  joltWorld.setPositionAndRotation(controller.pelvisId, [pPos[0], pPos[1] + 0.30, pPos[2]], rot);
+  joltWorld.setPositionAndRotation(controller.thoraxId, [tPos[0], tPos[1] + 0.30, tPos[2]], rot);
   controller.grfController.hasImpacted = false;
   controller.grfController.isSettled = false;
   controller.grfController.elapsedTimeS = 0;
@@ -199,19 +264,37 @@ function animate() {
   lastTime = now;
 
   let tel = null;
-  if (joltWorld && controller) {
-    joltWorld.step(dt);
-    tel = controller.step(dt);
+  try {
+    if (joltWorld && controller) {
+      joltWorld.step(dt);
+      tel = controller.step(dt);
 
-    // Sync Physics Fox position via parent container while preserving animal.object identity (llms.txt:47, 172)
-    if (window.physContainer && physFox && physFox.object) {
-      const tPos = joltWorld.getPosition(controller.thoraxId);
-      const pPos = joltWorld.getPosition(controller.pelvisId);
-      window.physContainer.position.set(0.65 + (tPos[0] + pPos[0]) * 0.5, (tPos[1] + pPos[1]) * 0.5 - 0.38, (tPos[2] + pPos[2]) * 0.5);
-      window.physContainer.rotation.x = -controller.grfController.pitchRad;
-      // Ensure animal.object remains strict identity transform
-      physFox.object.position.set(0, 0, 0);
-      physFox.object.rotation.set(0, 0, 0);
+      // Sync Physics Fox position via parent container while preserving animal.object identity (llms.txt:47, 172)
+      if (physContainer && physFox && physFox.object) {
+        const tPos = joltWorld.getPosition(controller.thoraxId);
+        const pPos = joltWorld.getPosition(controller.pelvisId);
+        const comX = (tPos[0] + pPos[0]) * 0.5;
+        const comY = (tPos[1] + pPos[1]) * 0.5;
+        const comZ = (tPos[2] + pPos[2]) * 0.5;
+
+        const pitch = -controller.grfController.pitchRad;
+        const h = 0.38; // nominal height from ground origin to spine CoM
+        physContainer.rotation.x = pitch;
+        physContainer.position.set(
+          comX,
+          comY - h * Math.cos(pitch),
+          comZ - h * Math.sin(pitch)
+        );
+
+        // Ensure animal.object remains strict identity transform
+        physFox.object.position.set(0, 0, 0);
+        physFox.object.rotation.set(0, 0, 0);
+      }
+    }
+  } catch (err) {
+    if (!window.__animateError) {
+      console.error('Error in animate:', err);
+      window.__animateError = { message: err.message, stack: err.stack };
     }
   }
 
@@ -226,7 +309,7 @@ function animate() {
     const tq = tel.jointTorquesNm;
 
     hudContent.innerHTML = `
-      <div><span class="badge badge-hero">Split-Authority</span> Fox Mass: <b>8.50 kg</b></div>
+      <div><span class="badge badge-hero">Split-Authority</span> Fox Mass: <b>10.58 kg</b></div>
       <div style="margin-top:6px"><b>GRF Fore/Hind Split:</b> ${forePct}% / ${hindPct}% <span class="badge badge-pass">PASS</span></div>
       <div><b>Fore Load:</b> ${tel.foreForceN.toFixed(1)} N | <b>Hind Load:</b> ${tel.hindForceN.toFixed(1)} N</div>
       <div><b>Core Pitch Angle:</b> ${tel.pitchDeg.toFixed(2)}°</div>

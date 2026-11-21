@@ -21,9 +21,15 @@ export { writeBake, readBake } from './bake.js';
  * @param {object} opts  { seed, quality, sex, age, ground, water, position, heading, baked, worker, onProgress }
  */
 export async function createAnimal(species, opts = {}) {
-  const s = await loadSpecies(species);
+  let sId = species;
+  let options = opts;
+  if (typeof species === 'object' && species !== null && !species.rig && (species.species || species.id)) {
+    sId = species.species || species.id;
+    options = { ...species, ...opts };
+  }
+  const s = await loadSpecies(sId);
   let data;
-  if (opts.baked) data = readBake(opts.baked instanceof ArrayBuffer ? opts.baked : await opts.baked);
-  else data = await buildAnimalData(s, opts, opts.onProgress);
-  return new Animal(s, data, opts);
+  if (options.baked) data = readBake(options.baked instanceof ArrayBuffer ? options.baked : await options.baked);
+  else data = await buildAnimalData(s, options, options.onProgress);
+  return new Animal(s, data, options);
 }

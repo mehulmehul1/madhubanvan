@@ -491,7 +491,7 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
     }
 
     const ikResult = solveFoxIK({
-      ground: (x, z) => this.sampleGround(x, z),
+      ground: this.walk ? ((x, z) => this.sampleGround(x, z)) : ((x, z) => 0),
       targets: plannedTargets,
       tolMm: 2.0,
       maxIter: 50,
