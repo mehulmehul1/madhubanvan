@@ -41,6 +41,8 @@ export class JoltWorld {
     this.activeShapes = new Set();
     this.activeConstraints = new Set();
     this.activeConstraintSettings = new Set();
+    this.bodyToShape = new Map();
+    this.constraintToSettings = new Map();
     this.trackedDisposables = new Set();
     this.wrenchGenerators = new Set();
 
@@ -163,6 +165,7 @@ export class JoltWorld {
     const bodyID = body.GetID();
     this.bodyInterface.AddBody(bodyID, Jolt.EActivation_DontActivate);
     this.activeBodies.add(bodyID);
+    this.bodyToShape.set(bodyID, shape);
 
     Jolt.destroy(creationSettings);
     Jolt.destroy(shapeSettings);
@@ -197,6 +200,7 @@ export class JoltWorld {
     const bodyID = body.GetID();
     this.bodyInterface.AddBody(bodyID, Jolt.EActivation_DontActivate);
     this.activeBodies.add(bodyID);
+    this.bodyToShape.set(bodyID, shape);
 
     Jolt.destroy(creationSettings);
     Jolt.destroy(shapeSettings);
@@ -227,6 +231,7 @@ export class JoltWorld {
     const bodyID = body.GetID();
     this.bodyInterface.AddBody(bodyID, Jolt.EActivation_Activate);
     this.activeBodies.add(bodyID);
+    this.bodyToShape.set(bodyID, shape);
 
     Jolt.destroy(creationSettings);
     Jolt.destroy(shapeSettings);
@@ -258,6 +263,7 @@ export class JoltWorld {
     const bodyID = body.GetID();
     this.bodyInterface.AddBody(bodyID, Jolt.EActivation_Activate);
     this.activeBodies.add(bodyID);
+    this.bodyToShape.set(bodyID, shape);
 
     Jolt.destroy(creationSettings);
     Jolt.destroy(shapeSettings);
@@ -377,6 +383,7 @@ export class JoltWorld {
     this.physicsSystem.AddConstraint(constraint);
     this.activeConstraints.add(constraint);
     this.activeConstraintSettings.add(s);
+    this.constraintToSettings.set(constraint, s);
     return constraint;
   }
 
@@ -477,11 +484,29 @@ export class JoltWorld {
 
   // --- Dispose Lifecycle ---
 
+  destroyConstraint(constraint) {
+    if (this.activeConstraints.has(constraint)) {
+      this.physicsSystem.RemoveConstraint(constraint);
+      this.activeConstraints.delete(constraint);
+    }
+    const settings = this.constraintToSettings.get(constraint);
+    if (settings) {
+      this.activeConstraintSettings.delete(settings);
+      this.Jolt.destroy(settings);
+      this.constraintToSettings.delete(constraint);
+    }
+  }
+
   destroyBody(bodyID) {
     if (this.activeBodies.has(bodyID)) {
       this.bodyInterface.RemoveBody(bodyID);
       this.bodyInterface.DestroyBody(bodyID);
       this.activeBodies.delete(bodyID);
+      const shape = this.bodyToShape.get(bodyID);
+      if (shape) {
+        this.activeShapes.delete(shape);
+        this.bodyToShape.delete(bodyID);
+      }
     }
   }
 

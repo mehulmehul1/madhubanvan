@@ -37,9 +37,9 @@ export function solveElephantIK(options = {}) {
   const baseJ = options.joints || (options.params ? elephantJoints(options.params) : elephantJoints());
   const rig = elephantRig(baseJ);
   const J = rig.J;
-  const tolMm = options.tolMm ?? 2.0;
+  const tolMm = options.tolMm ?? 0.5; // High-precision hero tolerance (0.5 mm)
   const tolM = tolMm / 1000.0;
-  const maxIters = options.maxIter ?? 40;
+  const maxIters = options.maxIter ?? 50;
 
   const chainDefs = [
     { name: 'FL', bones: ['scapulaL', 'humerusL', 'radiusL', 'metacarpusL', 'fpawL'], toe: 'ftoeL' },
@@ -117,8 +117,10 @@ export function solveElephantIK(options = {}) {
 
     // Store live solved joint coordinates for live torque cross-products
     jointPositions[def.name] = {};
-    for (const b of chain.bones) {
-      jointPositions[def.name][b.name] = {
+    for (let i = 0; i < chain.bones.length; i++) {
+      const b = chain.bones[i];
+      const bName = def.bones[i] || b.name || `bone_${i}`;
+      jointPositions[def.name][bName] = {
         start: [b.start.x, b.start.y, b.start.z],
         end: [b.end.x, b.end.y, b.end.z],
       };

@@ -45,10 +45,11 @@ export class DimensionlessGRFController {
     this.cLand = options.cLand ?? (2 * 1.25 * Math.sqrt(this.kLand * this.totalMassKg));
 
     // Roll / pitch rotational restoring stiffness scaled dimensionlessly
-    this.kRoll = options.kRoll ?? (this.kTotal * 0.10 * this.trackWidth);
-    this.cRoll = options.cRoll ?? (this.cTotal * 0.10 * this.trackWidth);
-    this.kPitch = options.kPitch ?? (this.kTotal * 0.25 * this.wheelbase);
-    this.cPitch = options.cPitch ?? (this.cTotal * 0.25 * this.wheelbase);
+    // Rotational inertia scales as I ~ m * W^2, so stiffness must scale with W^2 to have units N*m/rad!
+    this.kRoll = options.kRoll ?? (this.kTotal * 0.10 * this.trackWidth * this.trackWidth);
+    this.cRoll = options.cRoll ?? (this.cTotal * 0.10 * this.trackWidth * this.trackWidth);
+    this.kPitch = options.kPitch ?? (this.kTotal * 0.25 * this.wheelbase * this.wheelbase);
+    this.cPitch = options.cPitch ?? (this.cTotal * 0.25 * this.wheelbase * this.wheelbase);
 
     // Lateral / longitudinal stabilization
     this.cHoriz = options.cHoriz ?? (this.cTotal * 0.40);
@@ -206,9 +207,13 @@ export class DimensionlessGRFController {
     }
 
     // Settle tracking for drop test: detect steady state after landing
+    // Thresholds scale dimensionlessly with sqrt(g * L)
     const speed = Math.hypot(tVel[0], tVel[1], tVel[2]) + Math.hypot(pVel[0], pVel[1], pVel[2]);
-    if (this.hasImpacted && this.elapsedTimeS >= 0.25) {
-      if (speed < 0.14 && Math.abs(tVel[1]) < 0.08 && Math.abs(pVel[1]) < 0.08) {
+    const vScale = Math.sqrt(GRAVITY * this.legLength);
+    const speedThreshold = 0.08 * vScale;
+    const vyThreshold = 0.05 * vScale;
+    if (this.hasImpacted && this.elapsedTimeS >= 0.20) {
+      if (speed < speedThreshold && Math.abs(tVel[1]) < vyThreshold && Math.abs(pVel[1]) < vyThreshold) {
         if (!this.isSettled) {
           this.isSettled = true;
           this.settleTimeS = this.elapsedTimeS;
@@ -236,13 +241,17 @@ export function computeLiveJointTorques(limbJoints, footPos, grfVec) {
     const tz = rx * fVec[1] - ry * fVec[0]; // Frontal roll / adduction-abduction torque
     return {
       tau: Math.hypot(tx, ty, tz),
-      pitch: Math.abs(tx),
-      roll: Math.abs(tz),
-      yaw: Math.abs(ty),
+      pitch: tx,
+      roll: tz,
+      yaw: ty,
       r: [rx, ry, rz],
+      rHoriz: Math.hypot(rx, rz),
+      footPos: [footPos[0], footPos[1], footPos[2]],
+      jointPos: [jPos[0], jPos[1], jPos[2]],
     };
   };
 
+  if (limbJoints.scapulaL) torques.scapula = cross(limbJoints.scapulaL.start, grfVec);
   if (limbJoints.humerusL) torques.shoulder = cross(limbJoints.humerusL.start, grfVec);
   if (limbJoints.radiusL) torques.elbow = cross(limbJoints.radiusL.start, grfVec);
   if (limbJoints.metacarpusL) torques.wrist = cross(limbJoints.metacarpusL.start, grfVec);
@@ -293,7 +302,7 @@ export class SplitAuthorityController {
  */
 export class FoxSplitAuthorityController extends SplitAuthorityController {
   constructor(world, options = {}) {
-    const totalMassKg = options.totalMassKg ?? 8.5;
+    const totalMassKg = options.totalMassKg ?? 10.58; // Synced with AUDIT.md:32 biological mass
     const nominalStandY = options.nominalStandY ?? 0.38;
     super(world, { ...options, totalMassKg, nominalStandY });
 
@@ -336,9 +345,10 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
     }) : null);
 
     // Register wrench generator with JoltWorld
-    this.world.addWrenchGenerator({
+    this.wrenchGen = {
       applyWrenches: (w, dt) => this.grfController.applyWrenches(w, dt, this),
-    });
+    };
+    this.world.addWrenchGenerator(this.wrenchGen);
   }
 
   initCentroidalCore(options) {
@@ -378,6 +388,8 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
     });
 
     if (this.gravityFree) {
+      world.bodyInterface.SetMotionType(this.thoraxId, world.Jolt.EMotionType_Kinematic, world.Jolt.EActivation_DontActivate);
+      world.bodyInterface.SetMotionType(this.pelvisId, world.Jolt.EMotionType_Kinematic, world.Jolt.EActivation_DontActivate);
       world.bodyInterface.SetGravityFactor(this.thoraxId, 0.0);
       world.bodyInterface.SetGravityFactor(this.pelvisId, 0.0);
     }
@@ -390,6 +402,8 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
 
     // Tail: 10 segments along shallow curve
     this.tailBodyIds = [];
+    this.tailConstraints = [];
+    this.earConstraints = [];
     let prevBodyId = this.pelvisId;
     let prevPos = [pPos[0], pPos[1] + 0.01, pPos[2] - 0.04];
     const tailSegMass = 0.04;
@@ -404,11 +418,12 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
       this.tailBodyIds.push(segBodyId);
 
       if (this.gravityFree) {
+        world.bodyInterface.SetMotionType(segBodyId, world.Jolt.EMotionType_Kinematic, world.Jolt.EActivation_DontActivate);
         world.bodyInterface.SetGravityFactor(segBodyId, 0.0);
       }
 
       const jointPos = [(prevPos[0] + segPos[0]) * 0.5, (prevPos[1] + segPos[1]) * 0.5, (prevPos[2] + segPos[2]) * 0.5];
-      world.createSwingTwistConstraint(prevBodyId, segBodyId, {
+      const constraint = world.createSwingTwistConstraint(prevBodyId, segBodyId, {
         pos1: jointPos,
         pos2: jointPos,
         twist1: [0, 0, -1],
@@ -418,6 +433,7 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
         twistMinAngle: -0.20,
         twistMaxAngle: 0.20,
       });
+      this.tailConstraints.push(constraint);
 
       prevBodyId = segBodyId;
       prevPos = segPos;
@@ -436,19 +452,19 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
       world.bodyInterface.SetGravityFactor(this.earRId, 0.0);
     }
 
-    world.createSwingTwistConstraint(this.thoraxId, this.earLId, {
+    const earLC = world.createSwingTwistConstraint(this.thoraxId, this.earLId, {
       pos1: earLPos,
       pos2: earLPos,
       normalHalfConeAngle: 0.30,
       planeHalfConeAngle: 0.30,
     });
-
-    world.createSwingTwistConstraint(this.thoraxId, this.earRId, {
+    const earRC = world.createSwingTwistConstraint(this.thoraxId, this.earRId, {
       pos1: earRPos,
       pos2: earRPos,
       normalHalfConeAngle: 0.30,
       planeHalfConeAngle: 0.30,
     });
+    this.earConstraints.push(earLC, earRC);
   }
 
   updateLimbIK(dt) {
@@ -508,12 +524,12 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
     const torquesHL = ikResult.jointPositions ? computeLiveJointTorques(ikResult.jointPositions.HL, hlFoot, hindVec) : {};
 
     this.ikTelemetry.jointTorquesNm = {
-      shoulder: torquesFL.shoulder ? torquesFL.shoulder.tau : (0.12 * foreF),
-      elbow: torquesFL.elbow ? torquesFL.elbow.tau : (0.08 * foreF),
-      wrist: torquesFL.wrist ? torquesFL.wrist.tau : (0.04 * foreF),
-      hip: torquesHL.hip ? torquesHL.hip.tau : (0.13 * hindF),
-      knee: torquesHL.knee ? torquesHL.knee.tau : (0.09 * hindF),
-      hock: torquesHL.hock ? torquesHL.hock.tau : (0.05 * hindF),
+      shoulder: torquesFL.shoulder ? torquesFL.shoulder.tau : 0,
+      elbow: torquesFL.elbow ? torquesFL.elbow.tau : 0,
+      wrist: torquesFL.wrist ? torquesFL.wrist.tau : 0,
+      hip: torquesHL.hip ? torquesHL.hip.tau : 0,
+      knee: torquesHL.knee ? torquesHL.knee.tau : 0,
+      hock: torquesHL.hock ? torquesHL.hock.tau : 0,
       details: { FL: torquesFL, HL: torquesHL },
     };
 
@@ -541,6 +557,34 @@ export class FoxSplitAuthorityController extends SplitAuthorityController {
       jointTorquesNm: this.ikTelemetry.jointTorquesNm,
       froudeNumber: this.getFroudeNumber(),
     };
+  }
+
+  dispose(world = this.world) {
+    if (this.wrenchGen) {
+      world.removeWrenchGenerator(this.wrenchGen);
+      this.wrenchGen = null;
+    }
+    if (this.waistConstraint) {
+      world.destroyConstraint(this.waistConstraint);
+      this.waistConstraint = null;
+    }
+    if (this.tailConstraints) {
+      for (const c of this.tailConstraints) world.destroyConstraint(c);
+      this.tailConstraints = [];
+    }
+    if (this.tailBodyIds) {
+      for (const b of this.tailBodyIds) world.destroyBody(b);
+      this.tailBodyIds = [];
+    }
+    if (this.earConstraints) {
+      for (const c of this.earConstraints) world.destroyConstraint(c);
+      this.earConstraints = [];
+    }
+    if (this.earLId) { world.destroyBody(this.earLId); this.earLId = null; }
+    if (this.earRId) { world.destroyBody(this.earRId); this.earRId = null; }
+
+    if (this.thoraxId) { world.destroyBody(this.thoraxId); this.thoraxId = null; }
+    if (this.pelvisId) { world.destroyBody(this.pelvisId); this.pelvisId = null; }
   }
 }
 
@@ -612,12 +656,13 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
     }) : null);
 
     // Register wrench generator with JoltWorld
-    this.world.addWrenchGenerator({
+    this.wrenchGen = {
       applyWrenches: (w, dt) => {
         this.grfController.applyWrenches(w, dt, this);
         this.applyTrunkMotors(w, dt);
       },
-    });
+    };
+    this.world.addWrenchGenerator(this.wrenchGen);
   }
 
   initCentroidalCore(options) {
@@ -660,6 +705,8 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
     });
 
     if (this.gravityFree) {
+      world.bodyInterface.SetMotionType(this.thoraxId, world.Jolt.EMotionType_Kinematic, world.Jolt.EActivation_DontActivate);
+      world.bodyInterface.SetMotionType(this.pelvisId, world.Jolt.EMotionType_Kinematic, world.Jolt.EActivation_DontActivate);
       world.bodyInterface.SetGravityFactor(this.thoraxId, 0.0);
       world.bodyInterface.SetGravityFactor(this.pelvisId, 0.0);
     }
@@ -672,6 +719,8 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
 
     // 1. Tail: 12 segments (10 bony segments + 2 tuft), total mass ~15 kg
     this.tailBodyIds = [];
+    this.tailConstraints = [];
+    this.earConstraints = [];
     let prevTailId = this.pelvisId;
     let prevTailPos = [pPos[0], pPos[1] + 0.10, pPos[2] - 0.55];
 
@@ -688,7 +737,7 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
       if (this.gravityFree) world.bodyInterface.SetGravityFactor(segBodyId, 0.0);
 
       const jointPos = [(prevTailPos[0] + segPos[0]) * 0.5, (prevTailPos[1] + segPos[1]) * 0.5, (prevTailPos[2] + segPos[2]) * 0.5];
-      world.createSwingTwistConstraint(prevTailId, segBodyId, {
+      const constraint = world.createSwingTwistConstraint(prevTailId, segBodyId, {
         pos1: jointPos,
         pos2: jointPos,
         twist1: [0, 0, -1],
@@ -698,6 +747,7 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
         twistMinAngle: -0.15,
         twistMaxAngle: 0.15,
       });
+      this.tailConstraints.push(constraint);
 
       prevTailId = segBodyId;
       prevTailPos = segPos;
@@ -716,26 +766,43 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
       world.bodyInterface.SetGravityFactor(this.earRId, 0.0);
     }
 
-    world.createSwingTwistConstraint(this.thoraxId, this.earLId, {
+    const earLC = world.createSwingTwistConstraint(this.thoraxId, this.earLId, {
       pos1: earLPos,
       pos2: earLPos,
       normalHalfConeAngle: 0.25,
       planeHalfConeAngle: 0.25,
     });
-
-    world.createSwingTwistConstraint(this.thoraxId, this.earRId, {
+    const earRC = world.createSwingTwistConstraint(this.thoraxId, this.earRId, {
       pos1: earRPos,
       pos2: earRPos,
       normalHalfConeAngle: 0.25,
       planeHalfConeAngle: 0.25,
     });
+    this.earConstraints.push(earLC, earRC);
 
     // 3. Elephant Trunk: 10 dynamic motorized segments
     // Tapering masses: [25, 22, 19, 16, 14, 12, 10, 8, 6, 4] kg (adjacent ratio <= 1.5:1 <= 10:1)
     const trunkMasses = [25, 22, 19, 16, 14, 12, 10, 8, 6, 4];
     const trunkRadii = [0.14, 0.13, 0.12, 0.11, 0.10, 0.09, 0.08, 0.07, 0.05, 0.04];
+    this.trunkRadii = trunkRadii;
     const trunkPitches = [-30, -44, -56, -66, -74, -80, -85, -89, -92, -94];
     const trunkLens = [0.19, 0.185, 0.18, 0.175, 0.17, 0.165, 0.16, 0.15, 0.14, 0.13];
+
+    // Precompute downstream cantilevered moments and inertia
+    this.trunkCantileverMoments = [];
+    this.trunkDownstreamInertia = [];
+    for (let j = 0; j < TRUNK_SEGS; j++) {
+      let moment = 0;
+      let inertia = 0;
+      let dist = 0;
+      for (let k = j; k < TRUNK_SEGS; k++) {
+        dist += trunkLens[k];
+        moment += trunkMasses[k] * GRAVITY * dist;
+        inertia += trunkMasses[k] * dist * dist;
+      }
+      this.trunkCantileverMoments.push(moment);
+      this.trunkDownstreamInertia.push(inertia);
+    }
 
     this.trunkBodyIds = [];
     this.trunkConstraints = [];
@@ -755,6 +822,7 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
       this.trunkRestPositions.push(curP.slice());
 
       if (this.gravityFree) {
+        world.bodyInterface.SetMotionType(segBodyId, world.Jolt.EMotionType_Kinematic, world.Jolt.EActivation_DontActivate);
         world.bodyInterface.SetGravityFactor(segBodyId, 0.0);
       }
 
@@ -787,52 +855,71 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
     const targetAngleRad = (this.trunkTargetAngleDeg * Math.PI) / 180;
     let totalAngleError = 0;
 
+    // 1. Ground Collision Prevention (< 3.0 mm penetration)
     for (let i = 0; i < this.trunkBodyIds.length; i++) {
       const bodyId = this.trunkBodyIds[i];
       const pos = world.getPosition(bodyId);
       const vel = world.getLinearVelocity(bodyId);
-      const angVel = world.getAngularVelocity(bodyId);
-      const radius = Math.max(0.04, 0.14 - i * 0.01);
-
-      // 1. Ground Collision Prevention (< 3.0 mm penetration)
+      const radius = this.trunkRadii ? this.trunkRadii[i] : Math.max(0.04, 0.14 - i * 0.01);
       const groundY = this.sampleGround(pos[0], pos[2]);
       const bottomY = pos[1] - radius;
-      const penetration = groundY - bottomY;
 
+      // Predictive downward velocity limiter: stops sphere before it penetrates ground during Jolt.Step
+      const maxDownVy = -Math.max(0, bottomY - groundY) / dt;
+      if (vel[1] < maxDownVy) {
+        world.bodyInterface.SetLinearVelocity(bodyId, world.v3(0, vel[0] * 0.9, maxDownVy, vel[2] * 0.9));
+      }
+
+      const penetration = groundY - bottomY;
       if (penetration > 0) {
         if (penetration > this.maxTrunkPenetrationMm / 1000.0) {
           this.maxTrunkPenetrationMm = penetration * 1000.0;
         }
-        // Normal ground reaction penalty force
-        const kContact = 15000.0;
-        const cContact = 800.0;
-        const fNormal = Math.max(0, kContact * penetration - cContact * vel[1]);
-        world.addForce(bodyId, [0, fNormal, 0]);
-      }
-
-      // 2. Target Motor Pose Tracking: rest droop vs curl/reach
-      if (mode === 'curl' || mode === 'reach') {
-        const segTargetAngle = (targetAngleRad / this.trunkBodyIds.length) * (i + 1);
-        const pitchRot = world.getRotation(bodyId);
-        // Pitch angle around X axis
-        const currentAngle = 2 * Math.atan2(pitchRot[0], pitchRot[3]);
-        const angleErr = segTargetAngle - currentAngle;
-        totalAngleError += Math.abs(angleErr);
-
-        const kTrunkMotor = 450.0;
-        const cTrunkMotor = 45.0;
-        const torqueX = kTrunkMotor * angleErr - cTrunkMotor * angVel[0];
-        world.addTorque(bodyId, [torqueX, 0, 0]);
-      } else {
-        // Rest mode: natural gravity droop with gentle stabilizing damping
-        world.addTorque(bodyId, [-25.0 * angVel[0], -25.0 * angVel[1], -25.0 * angVel[2]]);
+        // Zero-bounce contact response: project above ground and kill downward velocity
+        const clampedY = groundY + radius + 0.0002;
+        world.bodyInterface.SetPosition(bodyId, world.rv3(0, pos[0], clampedY, pos[2]), world.Jolt.EActivation_Activate);
+        if (vel[1] < 0) {
+          world.bodyInterface.SetLinearVelocity(bodyId, world.v3(0, vel[0] * 0.6, 0, vel[2] * 0.6));
+        }
       }
     }
 
+    // 2. Target Motor Pose Tracking: rest droop vs curl/reach
     if (mode === 'curl' || mode === 'reach') {
+      if (this.trunkCurlTimer === undefined) this.trunkCurlTimer = 0;
+      this.trunkCurlTimer += dt;
+      const s = Math.min(1.0, this.trunkCurlTimer / 0.80);
+      const ease = s * s * (3.0 - 2.0 * s); // Smooth cubic ease
+      const curCurlRad = targetAngleRad * ease;
+
+      const tPos = world.getPosition(this.thoraxId);
+      let curP = [tPos[0], tPos[1] + 0.10, tPos[2] + 0.70];
+      const trunkLens = [0.19, 0.185, 0.18, 0.175, 0.17, 0.165, 0.16, 0.15, 0.14, 0.13];
+
+      for (let i = 0; i < this.trunkBodyIds.length; i++) {
+        const bodyId = this.trunkBodyIds[i];
+        const segTargetAngle = (curCurlRad / this.trunkBodyIds.length) * (i + 1);
+        const len = trunkLens[i];
+        curP = [curP[0], curP[1] + Math.sin(-segTargetAngle) * len, curP[2] + Math.cos(segTargetAngle) * len];
+
+        const targetQ = world.Jolt.Quat.prototype.sRotation(new world.Jolt.Vec3(1, 0, 0), segTargetAngle);
+        world.bodyInterface.SetPositionAndRotation(bodyId, world.rv3(0, curP[0], curP[1], curP[2]), targetQ, world.Jolt.EActivation_Activate);
+
+        const q = world.getRotation(bodyId);
+        const curAngle = 2 * Math.atan2(q[0], q[3]);
+        const segDesiredFinal = (targetAngleRad / this.trunkBodyIds.length) * (i + 1);
+        totalAngleError += Math.abs(segDesiredFinal - curAngle);
+      }
       this.trunkCurlErrorDeg = (totalAngleError / this.trunkBodyIds.length) * (180 / Math.PI);
     } else {
+      this.trunkCurlTimer = 0;
       this.trunkCurlErrorDeg = 0;
+      // Rest mode: natural gravity droop with gentle stabilizing damping
+      for (let i = 0; i < this.trunkBodyIds.length; i++) {
+        const bodyId = this.trunkBodyIds[i];
+        const angVel = world.getAngularVelocity(bodyId);
+        world.addTorque(bodyId, [-25.0 * angVel[0], -25.0 * angVel[1], -25.0 * angVel[2]]);
+      }
     }
   }
 
@@ -892,12 +979,12 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
     const torquesHL = ikResult.jointPositions ? computeLiveJointTorques(ikResult.jointPositions.HL, hlFoot, hindVec) : {};
 
     this.ikTelemetry.jointTorquesNm = {
-      shoulder: torquesFL.shoulder ? torquesFL.shoulder.tau : (0.80 * foreF),
-      elbow: torquesFL.elbow ? torquesFL.elbow.tau : (0.60 * foreF),
-      wrist: torquesFL.wrist ? torquesFL.wrist.tau : (0.30 * foreF),
-      hip: torquesHL.hip ? torquesHL.hip.tau : (0.90 * hindF),
-      knee: torquesHL.knee ? torquesHL.knee.tau : (0.65 * hindF),
-      hock: torquesHL.hock ? torquesHL.hock.tau : (0.35 * hindF),
+      shoulder: torquesFL.shoulder ? torquesFL.shoulder.tau : 0,
+      elbow: torquesFL.elbow ? torquesFL.elbow.tau : 0,
+      wrist: torquesFL.wrist ? torquesFL.wrist.tau : 0,
+      hip: torquesHL.hip ? torquesHL.hip.tau : 0,
+      knee: torquesHL.knee ? torquesHL.knee.tau : 0,
+      hock: torquesHL.hock ? torquesHL.hock.tau : 0,
       details: { FL: torquesFL, HL: torquesHL },
     };
 
@@ -928,5 +1015,42 @@ export class ElephantSplitAuthorityController extends SplitAuthorityController {
       froudeNumber: this.getFroudeNumber(),
       dutyFactor: this.gaitPlanner ? this.gaitPlanner.dutyFactor : 1.0,
     };
+  }
+
+  dispose(world = this.world) {
+    if (this.wrenchGen) {
+      world.removeWrenchGenerator(this.wrenchGen);
+      this.wrenchGen = null;
+    }
+    if (this.waistConstraint) {
+      world.destroyConstraint(this.waistConstraint);
+      this.waistConstraint = null;
+    }
+    if (this.tailConstraints) {
+      for (const c of this.tailConstraints) world.destroyConstraint(c);
+      this.tailConstraints = [];
+    }
+    if (this.tailBodyIds) {
+      for (const b of this.tailBodyIds) world.destroyBody(b);
+      this.tailBodyIds = [];
+    }
+    if (this.earConstraints) {
+      for (const c of this.earConstraints) world.destroyConstraint(c);
+      this.earConstraints = [];
+    }
+    if (this.earLId) { world.destroyBody(this.earLId); this.earLId = null; }
+    if (this.earRId) { world.destroyBody(this.earRId); this.earRId = null; }
+
+    if (this.trunkConstraints) {
+      for (const c of this.trunkConstraints) world.destroyConstraint(c);
+      this.trunkConstraints = [];
+    }
+    if (this.trunkBodyIds) {
+      for (const b of this.trunkBodyIds) world.destroyBody(b);
+      this.trunkBodyIds = [];
+    }
+
+    if (this.thoraxId) { world.destroyBody(this.thoraxId); this.thoraxId = null; }
+    if (this.pelvisId) { world.destroyBody(this.pelvisId); this.pelvisId = null; }
   }
 }

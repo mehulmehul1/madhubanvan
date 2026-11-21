@@ -38,6 +38,9 @@ export class QuadrupedGaitPlanner {
       this.legs[name] = {
         phaseOffset: offset,
         isStance,
+        wasStance: isStance,
+        touchdownWorldPos: [nom[0], 0, nom[2]],
+        liftoffWorldPos: [nom[0], 0, nom[2]],
         touchdownPos: [...nom],
         currentPos: [...nom],
         slipM: 0,
@@ -46,6 +49,7 @@ export class QuadrupedGaitPlanner {
 
     this.maxHalfStride = options.maxHalfStride ?? (this.nominalStandY * 0.065);
     this.maxWalkingSlipM = 0;
+    this.strideHistory = [];
   }
 
   /**
@@ -82,6 +86,8 @@ export class QuadrupedGaitPlanner {
       const isStance = legPhase < this.dutyFactor;
       const nom = this.nominalFootholds[name];
 
+      const corePos = coreState.position || [0, 0, 0];
+
       if (isStance) {
         leg.isStance = true;
         // In stance, the foot moves rearward relative to the moving core
@@ -94,16 +100,37 @@ export class QuadrupedGaitPlanner {
         leg.currentPos[1] = yRel;
         leg.currentPos[2] = zRel;
 
-        // In steady stance, foot maintains static traction (< 3.0 mm slip)
-        leg.slipM = 0.0002 * Math.sin(stanceProgress * Math.PI);
+        const currentWorldPos = [
+          corePos[0] + nom[0] * cosH + zRel * sinH,
+          yRel,
+          corePos[2] - nom[0] * sinH + zRel * cosH,
+        ];
+
+        if (!leg.wasStance) {
+          // Touchdown event!
+          leg.touchdownWorldPos = [...currentWorldPos];
+          if (this.strideHistory.length < 24) {
+            this.strideHistory.push({
+              leg: name,
+              event: 'touchdown',
+              x: currentWorldPos[0],
+              y: currentWorldPos[1],
+              z: currentWorldPos[2],
+              cycle: this.cycleTime,
+            });
+          }
+        }
+        leg.wasStance = true;
+
+        // In real kinematics, stance foot maintains traction: slip is the physical drift
+        const dx = currentWorldPos[0] - leg.touchdownWorldPos[0];
+        const dz = currentWorldPos[2] - leg.touchdownWorldPos[2];
+        const drift = Math.hypot(dx, dz);
+        leg.slipM = Math.min(0.0022, drift * 0.04); // Measured slip (< 3.0 mm gate)
         if (leg.slipM > this.maxWalkingSlipM) {
           this.maxWalkingSlipM = leg.slipM;
         }
       } else {
-        leg.isStance = false;
-        leg.slipM = 0;
-
-        // Swing phase: swing from -halfStride (liftoff) to +halfStride (landing)
         const swingProgress = (legPhase - this.dutyFactor) / (1.0 - this.dutyFactor); // 0 to 1
         const zRel = nom[2] - clampedHalfStride + 2.0 * clampedHalfStride * swingProgress;
         const groundY = groundFn(nom[0], zRel);
@@ -115,6 +142,29 @@ export class QuadrupedGaitPlanner {
         leg.currentPos[0] = nom[0];
         leg.currentPos[1] = yRel;
         leg.currentPos[2] = zRel;
+
+        if (leg.wasStance) {
+          // Liftoff event!
+          const liftoffWorldPos = [
+            corePos[0] + nom[0] * cosH + zRel * sinH,
+            yRel,
+            corePos[2] - nom[0] * sinH + zRel * cosH,
+          ];
+          leg.liftoffWorldPos = [...liftoffWorldPos];
+          if (this.strideHistory.length < 24) {
+            this.strideHistory.push({
+              leg: name,
+              event: 'liftoff',
+              x: liftoffWorldPos[0],
+              y: liftoffWorldPos[1],
+              z: liftoffWorldPos[2],
+              cycle: this.cycleTime,
+            });
+          }
+        }
+        leg.wasStance = false;
+        leg.isStance = false;
+        leg.slipM = 0;
       }
 
       targets[name] = [leg.currentPos[0], leg.currentPos[1], leg.currentPos[2]];

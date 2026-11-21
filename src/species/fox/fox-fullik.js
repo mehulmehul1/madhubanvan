@@ -48,7 +48,7 @@ function applyBoneConstraint(b, bName) {
 export function solveFoxIK(options = {}) {
   const rig = foxRig(options.params || {});
   const J = rig.J;
-  const tolMm = options.tolMm ?? 2.0;
+  const tolMm = options.tolMm ?? 0.5; // High-precision hero tolerance (0.5 mm)
   const tolM = tolMm / 1000.0;
   const maxIters = options.maxIter ?? 40;
 
@@ -154,11 +154,15 @@ export function solveFoxIK(options = {}) {
   }
 
   const jointPositions = {};
-  for (const [name, c] of Object.entries(chains)) {
-    if (name === 'spine') continue;
-    jointPositions[name] = {};
-    for (const b of c.bones) {
-      jointPositions[name][b.name] = {
+  for (const def of chainDefs) {
+    if (!def.isLeg) continue;
+    const c = chains[def.name];
+    if (!c) continue;
+    jointPositions[def.name] = {};
+    for (let i = 0; i < c.bones.length; i++) {
+      const b = c.bones[i];
+      const bName = def.bones[i] || b.name || `bone_${i}`;
+      jointPositions[def.name][bName] = {
         start: [b.start.x, b.start.y, b.start.z],
         end: [b.end.x, b.end.y, b.end.z],
       };
