@@ -402,6 +402,105 @@ material sooner, and worth distrusting "the environment is stale" after the firs
 
 ---
 
+### Session 9 plan — how bands, zones and motifs actually work on the animals (next session)
+
+**The ask.** Understand how the pattern placement works as *design* on these animals — how the bands
+run, how the anatomical zones really divide a body, how motifs get chosen per region — so that we can
+then design variety deliberately, instead of guessing.
+
+Before writing anything down I mapped what the code actually offers. Findings below are the ground the
+session stands on. Useful headline: **the variety levers are almost all still closed, and three of them
+are already baked per-vertex and simply not read.**
+
+#### What varies today (verified, in `color.js`)
+
+| Lever | Scope |
+|---|---|
+| Palette index | manual URL param, per animal |
+| Colour count 2–4 | **per-seed** (`color.js:182`) |
+| Row/band alternation | positional |
+| Geometry (metres) | passive stretch only |
+
+Everything else is a **per-style global**: `tiles[8]`/`slots[8]` (`zones.js:28-36`), wobble, outline,
+`colours`, and `uMotifM`. Two individuals of one species with different seeds get the **same motifs in
+the same zones in the same colours**. Only the colour count moves.
+
+#### Dead code / latent, found while checking the above
+
+- `STYLES.tileH` / `tileW` / `hatch` / `rim` — these still exist and still look authoritative, but the
+  atlas path replaced them: `uMotifM` is what actually sets motif size. They are read only by the SDF
+  fallback (`fields.js`). Confirmed by grep — the only uses of `uP.x/uP.y/uP.z` are inside
+  `fieldTiles` calls on the SDF branch.
+- `vyaghra_tiger` (`params.js:18`) — a byte-identical duplicate of `vyaghra` that is **not in
+  `STYLE_KEYS`**, so it is unreachable, and it has no `STYLE_ZONES` entry, so forcing it would silently
+  fall back to scallop's zone map. Dead.
+- `MAD_SEED_SPACING`, `MAD_TILE` (`params.js:40-41`) — defined, never read. `MAD_SEED_TEXELS` *is* live
+  (Voronoi seed texture only).
+- `slotForRow` (`zones.js:44`) — exported, never imported.
+- **The library still defaults to Voronoi.** `animalObject-tsl.js:78` sets
+  `madhubaniTiles:'bomb'`; only `app/main.js:90` passes `'chain'`. Any caller using the library as a
+  package gets the old path. This is worth knowing — it is the most likely reason the artist's
+  "still the old patterns" reports kept recurring.
+- `docs`/`color.js:8` header comment still describes `aMad2` as `[radial, tailT]`; it is actually
+  `[angle, lateral, along, meanRadius]`.
+
+#### The good news: three variety levers are already built and unread
+
+- **`aMad1.x` = island, 0–15.** `designGroupOf` (`coatFields.js:27-37`) collapses 16 islands into the 8
+  zones we paint with, and the shader only ever reads the collapsed group. But the per-island value is
+  still baked per vertex and still sitting on the GPU. Discarded by the merge: torso vs chest,
+  head vs jaw vs ear/horn, fore vs hind legs, upper vs lower legs. **All of that distinction still
+  exists** — we just threw it away at the last step.
+- **`aMad1.w` = `spineT`**, a continuous nose→tail coordinate, 0→1. Baked, never read. This is exactly
+  the coordinate a banded layout needs — the cow reference has bands running *around* the barrel, which
+  means the band index is a function of position along the body. We have that number and are ignoring it.
+- **`weights.limbWhich`** exists per vertex (which limb), and `partA` (axial / limb / appendage) is
+  computed then discarded (`coatFields.js:152-153`). So "front leg vs back leg vs this specific leg"
+  is obtainable.
+
+Plus the **4 unused motifs per style** — confirmed genuinely dead, referenced only in comments, the
+patterns page and tooling. And `rig.J` already carries landmark joint positions (nose, occiput,
+neckBase, tailBase) that nothing in the coat uses.
+
+So the session is not blocked on plumbing. The raw material is there.
+
+#### Session shape
+
+1. **Read the references properly, and write down the rules, not adjectives.** Three paintings, three
+   different answers: the cow's *directional* bands (around the barrel, vertical on the leg — direction
+   is a per-zone property, not a global one), the bird's *compressing* scales over back and rump, the
+   boar's eight zones with organic boundaries. The deliverable is a short spec: what a "zone" is, what a
+   "band" is, and which of the two the artist actually means when they say "band".
+2. **Then decide the zone model.** 8 zones or 16 islands? Zones with organic boundaries, or islands?
+   This is the decision everything else hangs off, and it should be made against the references, not
+   against the shader.
+3. **Then open the levers**, in order of artistic return:
+   - per-species `uMotifM` (needs a setter — it does not exist today)
+   - per-seed motif choice from the 4 spares
+   - `spineT`-driven band index (the cow layout)
+   - per-seed motif rotation (exists in the Voronoi path, needs porting)
+4. **Fix the zone-map defects**, because variety built on a wrong zone map just produces varied
+   mistakes. See below.
+
+#### Known zone-map defects — agent-reported, needs a render check
+
+Not yet personally verified against a render, but they follow from `islandOfBone` and are worth
+checking before any variety work, since each one means part of an animal is being painted as the wrong
+zone:
+
+- `other(15)` maps to design group 5 = **tail**. So bird non-middle toes, all flight and tail feathers,
+  and snake tongue and fangs currently paint as tail.
+- **Bird legs lose the upper/lower split** — bird leg groups are `legL`/`legR`, so all legs take the
+  fore branch, and femur/tibia/tarsus match none of the lower-leg name patterns, so all three land in
+  `foreUpper`.
+- **Spiders lose fore/hind entirely** — all 8 legs and both palps take the fore branch, so
+  `hindUpper`/`hindLower` never fire for spiders at all.
+- **Swimmer median fins are not fins.** Dorsal/anal/caudal membranes are skinned to spine and caudal
+  bones, so they inherit torso/tail. Only paired pectoral and pelvic fins reach `fin(14)`.
+- `f[2]` is unreachable at `ccount < 4`, so the third fill only ever appears on 4-colour animals.
+
+---
+
 ## Raw notes from the artist
 
 > Verbatim, unedited, in full. This is the direction of record — everything below is commentary, this
@@ -479,3 +578,6 @@ once nothing references it.
 - `tools/motifuse.mjs` — **new (S6).** Which motifs reach which zone, and how much they cover
 - `tools/shot3d.mjs` — **new (S6).** 3D render + console/shader-error capture, `--nocov` / `--noatlas`
 - `docs/MOTIFS.md` — **new (S6).** The artist's editing guide
+- `PROGRESS.md` — **S9 plan.** Variety investigation: what varies today vs per-style globals, dead
+  config/latent levers, the three per-vertex variety signals already baked but unread, and the
+  zone-map defects to check before designing variety
